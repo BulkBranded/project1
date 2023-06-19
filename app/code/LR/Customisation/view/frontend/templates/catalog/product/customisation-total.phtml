@@ -1,0 +1,90 @@
+<?php
+    $minqty =($block->getProduct()->getCustomAttribute('minimum_qty')) ?
+    $block->getProduct()->getCustomAttribute('minimum_qty')->getValue(): 1;
+    $viewModel = $block->getViewModel();
+    $customerLoggedIn = $viewModel->getLoggedIn();
+?>
+<div id="customisation_right" class="product-customisation">
+    <div class="wrapper fixed">
+        <div class="content_wrapper">
+            <div class="content">
+            <h3><?= /* @noEscape */("Your Price") ?></h3>
+                <dl class="product-qty">
+                    <dt><?= /* @noEscape */("Quantity");?></dt>
+                    <dd><span class="qty-number"><?=  /* @noEscape */ $minqty; ?>x</span></dd>
+                </dl>
+                <dl class="product-unitprice">
+                    <dt><?= /* @noEscape */("Unit Pirce");?></dt>
+                    <dd><span class="amount"><?= $block->getChildHtml('product.info.price') ?></span></dd>
+                </dl>
+            </div>
+            <div class="c-basket__vat-switch">
+                <div class="vat-swithcer" data-mage-init='{"js/product-price-switcher":{}}'>
+                    <a href="javascript:void(0)" class="c-basket__vat-switch__button js-vat-switch--inc"> Incl. VAT </a>
+                    <a href="javascript:void(0)"
+                    class="c-basket__vat-switch__button js-vat-switch--exc icon-tick">
+                        Excl. VAT
+                    </a>
+                </div>
+            </div>
+            <div class="product-netprice">
+                <h4><?= /* @noEscape */("Net Price");?></h4>
+                <span class="total-price"></span>
+            </div>
+            <div class="product-info">
+                <ul>
+                    <li><?= /* @noEscape */("No delivery costs charged from £300") ?></li>
+                    <li><?= /* @noEscape */("Price includes all imprint costs") ?></li>
+                    <li class="warning"><?= /* @noEscape */("You can upload your logo in the shopping cart") ?></li>
+                </ul>
+            </div>
+            <?= $block->getBlockHtml('product.info.options.wrapper.bottom') ?>
+            <!-- For Popup model -->
+            <div class="click-actions">
+                <button type="button" class="download-quotation" >
+                    <span><?=  /* @noEscape */ __("Download PDF Quotation") ?></span>
+                </button>
+            </div>
+            <div id="quotation-details-form" style="display:none;">
+                <?php if (!$customerLoggedIn): ?>
+                    <button type="button" class="signup" >
+                        <span><?=  /* @noEscape */ __("Login") ?></span>
+                    </button>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    require(
+    [
+        'jquery',
+        'Magento_Ui/js/modal/modal'
+    ],
+    function(
+        $,
+        modal
+    ) {
+        var options = {
+            type: 'popup',
+            responsive: true,
+            innerScroll: true,
+            title: $('.page-title-wrapper.product .page-title .base').text(),
+            buttons: [{
+                text: $.mage.__('Proceed'),
+                class: '',
+                click: function () {
+                    $("#product-options-wrapper").insertBefore("#customisation_right");
+                    this.closeModal();
+                }
+            }]
+        };
+
+        var popup = modal(options, $('#quotation-details-form'));
+            $(".download-quotation").on('click',function(){
+            $("#product-options-wrapper").appendTo("#quotation-details-form");
+            $("#quotation-details-form").modal("openModal");
+        });
+    }
+);
+</script>

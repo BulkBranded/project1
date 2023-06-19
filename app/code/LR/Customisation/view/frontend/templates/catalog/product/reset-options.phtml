@@ -1,0 +1,74 @@
+<?php
+    $minqty =($block->getProduct()->getCustomAttribute('minimum_qty')) ?
+    $block->getProduct()->getCustomAttribute('minimum_qty')->getValue(): 1
+?>
+<?php if ($block->shouldRenderQuantity()):?>
+    <div class="field qty">
+        <label class="label" for="qty"><span><?= $block->escapeHtml(__('Qty')) ?></span></label>
+        <div class="control">
+            <input type="number"
+                name="qty"
+                id="qty"
+                min="0"
+                value="<?=   /* @noEscape */ $minqty;?>"
+                title="<?= $block->escapeHtmlAttr(__('Qty')) ?>"
+                class="input-text qty"
+                data-validate="<?= $block->escapeHtml(json_encode($block->getQuantityValidators())) ?>"
+                />
+        </div>
+        <div id="price-range" class="slider"></div>
+    </div>
+<?php endif; ?>
+<button class="product-option-reset" type="button">
+    <span><?=  /* @noEscape */ __("Reset selection") ?></span>
+</button>
+<script>
+    require(['jquery', 'Magento_Catalog/js/price-utils', 'jquery/ui'], function($, priceUtils){
+        $(document).ready(function(){
+            minqty = <?=  /* @noEscape */$block->getProduct()->getCustomAttribute('minimum_qty') ?
+            $block->getProduct()->getCustomAttribute('minimum_qty')->getValue(): 1 ?>;
+            maxqty = <?=  /* @noEscape */$block->getProduct()->getCustomAttribute('maximum_qty') ?
+            $block->getProduct()->getCustomAttribute('maximum_qty')->getValue() : 100 ?>;
+            $(function() {
+                function getFormattedPrice (price) {
+                    //todo add format data
+                    return priceUtils.formatPrice(price);
+                };
+
+                $("#price-range").slider({
+                    step: 1,
+                    range: "min", 
+                    min: minqty,
+                    max: maxqty,
+                    values: [0],
+                    slide: function(event, ui) {
+                        var e = localStorage.getItem("promoBrandCurrentVat"),
+                            str = ("exc" === e) ? $(
+                            '[data-role="priceBox"] .price-including-tax .price'
+                            ).text() : $(
+                            '[data-role="priceBox"] .price-excluding-tax .price'
+                            ).text();
+                            price = str.slice(1, str.length - 3).replace(",", '');
+                        $("#qty").val(ui.values[0]);
+                        $('.product-qty .qty-number').text(ui.values[0]);
+                        $('.product-netprice .total-price').text(getFormattedPrice(price * ui.values[0]));
+                    }
+                });
+            });
+
+            $(".product-option-reset").click(function(){
+                $("#product_addtocart_form").trigger("reset");
+                if($('.swatch-attribute').hasClass("color")){
+                    if(!$('.swatch-option').first().hasClass("selected")) {
+                        $('.swatch-option').first().trigger('click');
+                    }
+                }
+            });
+
+            $("#select_8").on("change",function(){
+                var GetValue= $("#select_8").val();
+                $("#options_10_text").val(GetValue);
+            });
+        });
+    });
+</script>

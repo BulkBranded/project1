@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright Â© 2018 Porto. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <move element="page.main.title" destination="product.info.media" before="-"/>
+        <move element="product.info.sku" destination="product.info.media" after="page.main.title"/>
+        <referenceBlock name="product.info.review" remove="true" />
+        <referenceBlock name="product.info.stock.sku" remove="true" />
+        <referenceBlock name="breadcrumbs" remove="true"/>
+
+        <referenceBlock name="product.info">
+            <block class="Magento\Catalog\Block\Product\View" name="product.info.customisation.totals" as="customisation_totals" template="LR_Customisation::catalog/product/customisation-total.phtml">
+                <arguments>
+                    <argument name="view_model" xsi:type="object">LR\Customisation\ViewModel\Customer</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+
+        <move element="product.info.price" destination="product.info.customisation.totals" after="-"/>
+        <move element="product.info.options.wrapper.bottom" destination="product.info.customisation.totals" after="-"/>
+        <referenceBlock name="product.info.social" remove="true"/>
+    </body>
+</page>

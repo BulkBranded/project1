@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="catalog_product_option">
+        <column xsi:type="varchar" name="custom_class" nullable="false" length="255" comment="Add class by promo branding"/>
+    </table>
+    <table name="mageworx_optiontemplates_group_option">
+        <column xsi:type="varchar" name="custom_class" nullable="false" length="255" comment="Add class by promo branding"/>
+    </table>
+    <table name="catalog_product_option_type_value">
+        <column xsi:type="varchar" name="custom_class" nullable="false" length="255" comment="Add class by promo branding"/>
+    </table>
+    <table name="mageworx_optiontemplates_group_option_type_value">
+        <column xsi:type="varchar" name="custom_class" nullable="false" length="255" comment="Add class by promo branding"/>
+    </table>
+</schema>

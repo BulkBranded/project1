@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="product.info.options.wrapper.bottom">
+            <block class="Magento\Catalog\Block\Product\View" name="product.info.reset-button" before="product.info.addtocart" template="LR_Customisation::catalog/product/reset-options.phtml"/>
+        </referenceContainer>
+        <move element="product.info.reset-button" destination="product.info.options.wrapper" after="-"/>
+        <referenceContainer name="content">
+            <block class="LR\Customisation\Block\Signin"
+               name="signin.popup.form"
+               template="LR_Customisation::catalog/product/signin.phtml"
+            />
+        </referenceContainer>
+    </body>
+</page>
+
+
+
