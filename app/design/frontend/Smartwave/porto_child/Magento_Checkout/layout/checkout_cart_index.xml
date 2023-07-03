@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="1column" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="page.bottom">
+            <container htmlTag="div" htmlClass="cart-bottom-section" after="-">
+                <container name="checkout.cart.bottom.container" htmlTag="div" htmlClass="cart-bottom-container">
+                    <container name="checkout.cart.bottom.right" htmlTag="div" htmlClass="cart-bottom-right" after="-">
+                        <block class="Magento\Framework\View\Element\Template" name="checkout.cart.summary.title" before="-" template="Magento_Theme::text.phtml">
+                            <arguments>
+                                <argument translate="true" name="text" xsi:type="string">Grand total</argument>
+                                <argument name="tag" xsi:type="string">h3</argument>
+                                <argument name="css_class" xsi:type="string">summary title</argument>
+                            </arguments>
+                        </block>
+                    </container>
+                </container>
+            </container>
+        </referenceContainer>
+        <move element="checkout.cart.coupon" destination="checkout.cart.bottom.container"  before="-" />
+        <move element="cart.summary" destination="checkout.cart.bottom.right" after="-" />
+        <referenceBlock name="page.main.title" remove="true" />
+    </body>
+</page>

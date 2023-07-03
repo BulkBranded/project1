@@ -11,10 +11,10 @@
             <h3><?= /* @noEscape */("Your Price") ?></h3>
                 <dl class="product-qty">
                     <dt><?= /* @noEscape */("Quantity");?></dt>
-                    <dd><span class="qty-number"><?=  /* @noEscape */ $minqty; ?>x</span></dd>
+                    <dd><span class="qty-number"><span><?=  /* @noEscape */ $minqty; ?></span>x</span></dd>
                 </dl>
                 <dl class="product-unitprice">
-                    <dt><?= /* @noEscape */("Unit Pirce");?></dt>
+                    <dt><?= /* @noEscape */("Unit Price");?></dt>
                     <dd><span class="amount"><?= $block->getChildHtml('product.info.price') ?></span></dd>
                 </dl>
             </div>
@@ -67,9 +67,10 @@
     ) {
         var options = {
             type: 'popup',
-            responsive: true,
+            responsive: false,
             innerScroll: true,
             title: $('.page-title-wrapper.product .page-title .base').text(),
+            modalClass: 'download-pdf-modal',
             buttons: [{
                 text: $.mage.__('Proceed'),
                 class: '',

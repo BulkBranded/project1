@@ -1,0 +1,57 @@
+.field {
+    input[type="email"], input[type="number"],
+    input[type="password"],
+    input[type="search"],
+    input[type="tel"],
+    input[type="text"],
+    input[type="url"],
+    input[type="color"],
+    input[type="date"],
+    input[type="datetime"],
+    input[type="datetime-local"],
+    input[type="month"],
+    input[type="time"],
+    input[type="week"],
+    textarea,
+    select {
+        background-color: #F5FFFD;
+        border-color: #00ba98;
+        border-radius: 10px;
+        padding: 8px 12px;
+        height: 60px;
+    }
+}
+
+.fieldset {
+    > .field {
+        .label {
+            font-size: 13px;
+            line-height: 24px;
+            color: #000;
+            margin-bottom: 13px;
+        }
+        .label[for="show-password"] {
+            span {
+                display: none;
+            }
+            &:after {
+                content: '';
+                background-image: url('../images/pass.svg');
+                background-position: center;
+                position: absolute;
+                right: 20px;
+                top: 18px;
+                width: 27.646px;
+                height: 18.21px;
+            }
+        }
+    }
+    > .legend {
+        color: #000;
+    }
+}
+
+html body .action.primary {
+    background-color: #00BA98;
+    border-color: #00BA98;
+}

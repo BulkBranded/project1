@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+    <group id="default">
+        <!--Product Fetch cron will run Every SUnday 2 AM-->
+        <!-- <job name="productdataapi_sync_productskus" method="execute" instance="LR\ProductDataApi\Cron\FetchProducts">
+            <schedule>0 2 * * 0</schedule>
+        </job>
+
+        <job name="productdataapi_sync_productdata" method="execute" instance="LR\ProductDataApi\Cron\FetchProductData">
+            <schedule>* * * * *</schedule>
+        </job>
+
+        <job name="productdataapi_clear_records" method="execute" instance="LR\ProductDataApi\Cron\ClearRecords">
+            <schedule>0 1 * * 0</schedule>
+        </job>
+
+        <job name="productdataapi_create_product_and_template" method="execute" instance="LR\ProductDataApi\Cron\CreateProductAndTemplate">
+            <schedule>* * * * *</schedule>
+        </job> -->
+    </group>
+</config>

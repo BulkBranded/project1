@@ -1,0 +1,285 @@
+// /**
+//  * Copyright © 2015 Magento. All rights reserved.
+//  * See COPYING.txt for license details.
+//  */
+
+//
+//  Common
+//  _____________________________________________
+
+& when (@media-common = true) {
+    .infobox-section {
+        background: #fff;
+        margin-bottom: 40px;
+        padding: 23px 0;
+
+        .porto-sicon-box {
+            margin-bottom: 0;
+
+            i {
+                color: #4dae65;
+            }
+
+            .porto-sicon-title {
+                color: #222;
+                font-size: 14px;
+                font-weight: 500;
+                line-height: 16.8px;
+                margin-bottom: 8px;
+            }
+
+            p {
+                color: #666;
+                font-size: 12px;
+                line-height: 12px;
+            }
+        }
+
+        .infobox-carousel .owl-stage .owl-item.active + .owl-item.active {
+            border-left: 1px solid #EBEBEB;
+        }
+    }
+
+    .category-slider.wpb_content_element {
+        margin-bottom: 40px;
+
+        h2 {
+            color: #000;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .products-slider.owl-carousel .owl-stage-outer {
+            padding-top: 0;
+        }
+        .thumb-info-wrapper {
+            border-radius: 50%;
+            max-width: 161px;
+            margin: 0 auto 20px;
+            box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.60);
+            &:after {
+                display: none;
+            }
+        }
+        .owl-carousel .owl-nav button[class*='owl-'] {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #000;
+            background: transparent;
+            &:before {
+                color: #000;
+                font-size: 24px;
+            }
+            &.disabled {
+                background: #000;
+                &:before {
+                    color: #fff;
+                }
+            }
+        }
+    }
+
+    ul.products.category-pos-outside li.product-category .thumb-info-title {
+        padding: 0;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 120%;
+        color: #989898;
+    }
+
+    .brand-section .vc_custom_heading {
+        text-align: center;
+        margin: 20px 0;
+        color: #000;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 48px;
+        text-transform: uppercase;
+    }
+
+    .product-about-section {
+        h2 {
+            margin-bottom: 40px;
+            color: #000;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 48px;
+            text-transform: uppercase;
+        }
+        p {
+            color: #000;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 40px;
+            text-transform: uppercase;
+        }
+    }
+
+    .porto-home-ads .home-ads-item {
+        line-height: 0;
+
+        &:not(:last-child) {
+            margin-bottom: 20px;
+        }
+
+        img {
+            width: 100%;
+        }
+    }
+
+    .widget_sidebar_menu {
+        border: 2px solid;
+        border-color: #00BA98;
+        border-radius: 5px 5px 0px 0px;
+
+        &.main-sidebar-menu {
+            .widget-title {
+                padding: 22px 20px;
+                border-bottom: 1px solid #EBEBEB;
+                background: #fff;
+                &:before {
+                    content: '\f0c9';
+                    font-family: "Font Awesome 5 Free";
+                    -webkit-font-smoothing: antialiased;
+                    line-height: 1;
+                    margin-right: 8px;
+                }
+            }
+        }
+        
+        .sw-megamenu.navigation.side-megamenu li.level0 a {
+            margin: 0;
+            padding: 14px 15px;
+            color: #222;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: capitalize;
+
+            i {
+                display: none;
+            }
+        }
+    }
+
+    .cms-index-index.page-layout-1column .column.main {
+        padding: 0;
+    }
+
+    .product-about-section {
+        padding-bottom: 40px;
+    }
+    
+    .review-section {
+        background-size: cover;
+        background-repeat: no-repeat;
+        padding-top: 0;
+        margin-bottom: 123px;
+    }
+
+    .review-items {
+        margin: 0 auto;
+        list-style: none;
+        max-width: 1072px;
+        text-align: center;
+        padding: 0;
+        bottom: -100px;
+        .review-item {
+            padding: 18px 32px 23px;
+            box-shadow: 0px 2.052539587020874px 12.31523609161377px 0px rgba(0, 0, 0, 0.45);
+            border-radius: 25.657px;
+            margin: 20px;
+            background: #fff;
+            .rating {
+                display: block;
+                margin-bottom: 15px;
+                img {
+                    max-width: 123px;
+                    display: block;
+                    margin: 0 auto;
+                }
+            }
+            p {
+                color: #000;
+                font-size: 17.447px;
+                line-height: 22.578px;
+                margin-bottom: 15px;
+            }
+            strong {
+                display: block;
+                color: #000;
+                font-size: 15.394px;
+                font-weight: 700;
+                line-height: 21.039px;
+            }
+        }
+    }
+}
+
+@media (min-width: 992px) {
+    .main-content-wrapper {
+        margin-top: 30px;
+        margin-bottom: 62px;
+
+        > .container > .row {
+            display: flex;
+            flex-wrap: wrap;
+            > div {
+                padding: 0 5px;
+            }
+            .col-lg-2.porto-home-sidebar {
+                flex: 0 0 19.466667%;
+                max-width: 19.466667%;
+            }
+            .main-content {
+                flex: 0 0 57.615%;
+                max-width: 57.615%;
+            }
+            .porto-home-ads {
+                flex: 0 0 22.92%;
+                max-width: 22.92%;
+            }
+        }
+    }
+    .infobox-section {
+        margin-bottom: 78px;
+    }
+    .category-slider.wpb_content_element {
+        margin-bottom: 78px;
+        h2 {
+            font-size: 32px;
+            margin-bottom: 43px;
+        }
+    }
+    .brand-section .vc_custom_heading {
+        margin: 50px 0;
+        font-size: 36px;
+        line-height: 68px;
+    }
+    .product-about-section {
+        padding-bottom: 80px;
+        h2 {
+            margin-bottom: 53px;
+            font-size: 36px;
+            line-height: 68px;
+        }
+    }
+    .review-section {
+        padding-top: 36px;
+        margin-bottom: 183px;
+    }
+}
+
+@media (max-width: 991px) {
+    .main-content-wrapper {
+        margin-bottom: 40px;
+    }
+    .category-slider.wpb_content_element h2 {
+        text-align: center;
+    }
+    .product-about-section h2 {
+        margin-bottom: 20px;
+    }
+}

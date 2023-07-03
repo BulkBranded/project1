@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add
+        id="LR_ProductDataApi::productdataapi_parent"
+        title="Sourcingmachine"
+        module="LR_ProductDataApi"
+        sortOrder="51"
+        resource="LR_ProductDataApi::menu_id"
+        />
+        <add
+            id="LR_ProductDataApi::productdataapi_apisync"
+            title="Product Data API"
+            module="LR_ProductDataApi"
+            sortOrder="20"
+            parent="LR_ProductDataApi::productdataapi_parent"
+            action="productdataapi/productdataapi/index"
+            resource="LR_ProductDataApi::productdataapi"
+        />
+    </menu>
+</config>

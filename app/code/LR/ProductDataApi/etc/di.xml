@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="productdataapi_productdataapi_list_data_source" xsi:type="string">LR\ProductDataApi\Model\ResourceModel\ProductDataApi\Grid\Collection</item>
+            </argument>
+        </arguments>
+    </type>
+    <virtualType name="LR\ProductDataApi\Model\ResourceModel\ProductDataApi\Grid\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">lr_productdataapi</argument>
+            <argument name="resourceModel" xsi:type="string">LR\ProductDataApi\Model\ResourceModel\ProductDataApi</argument>
+        </arguments>
+    </virtualType>
+    <type name="LR\ProductDataApi\Ui\Component\MassAction\Status\Options">
+        <arguments>
+            <argument name="data" xsi:type="array">
+                <item name="urlPath" xsi:type="string">productdataapi/productdataapi/massstatus</item>
+                <item name="paramName" xsi:type="string">status</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

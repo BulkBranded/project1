@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="lr_productdataapi" resource="default" engine="innodb" comment="Sourcingmachine Information">
+        <column xsi:type="int" name="entity_id" padding="11" unsigned="false" nullable="false" identity="true" comment=""/>
+        <column xsi:type="varchar" name="SMCode" nullable="false" length="200" comment="Product SKU"/>
+        <column xsi:type="varchar" name="ProductReferenceID" nullable="true" length="200" comment="Product Ref ID"/>
+        <column xsi:type="varchar" name="ProductName" nullable="true" length="200" comment="Product Name"/>
+        <column xsi:type="varchar" name="MainColours" nullable="true" length="200" comment="Product Main Color"/>
+        <column xsi:type="varchar" name="ActualColours" nullable="true" length="200" comment="Product Actual Color"/>
+        <column xsi:type="varchar" name="PriceRangeID" nullable="true" length="200" comment="Price Range ID"/>
+        <column xsi:type="varchar" name="PriceRange" nullable="true" length="200" comment="Price Range"/>
+        <column xsi:type="varchar" name="LeadTime" nullable="true" length="200" comment="LeadTime"/>
+        <column xsi:type="varchar" name="PrintArea" nullable="true" length="200" comment="PrintArea"/>
+        <column xsi:type="varchar" name="PrintSize" nullable="true" length="200" comment="PrintSize"/>
+        <column xsi:type="varchar" name="PrintMethod" nullable="true" length="200" comment="PrintMethod"/>
+        <column xsi:type="varchar" name="ProductDescription" nullable="true" length="3000" comment="ProductDescription"/>
+        <column xsi:type="varchar" name="AdditionalInformation" nullable="true" length="200" comment="AdditionalInformation"/>
+        <column xsi:type="varchar" name="Unit" nullable="true" length="200" comment="Unit"/>
+        <column xsi:type="varchar" name="IsPlain" nullable="true" length="200" comment="IsPlain"/>
+        <column xsi:type="varchar" name="IsColour1" nullable="true" length="200" comment="IsColour1"/>
+        <column xsi:type="varchar" name="IsColour2" nullable="true" length="200" comment="IsColour2"/>
+        <column xsi:type="varchar" name="IsColour3" nullable="true" length="200" comment="IsColour3"/>
+        <column xsi:type="varchar" name="IsColour4" nullable="true" length="200" comment="IsColour4"/>
+        <column xsi:type="varchar" name="IsEEE" nullable="true" length="200" comment="IsEEE"/>
+        <column xsi:type="varchar" name="EEEHeading" nullable="true" length="200" comment="EEEHeading"/>
+        <column xsi:type="varchar" name="QuantityBreak" nullable="true" length="1000" comment="QuantityBreak"/>
+        <column xsi:type="varchar" name="Plain" nullable="true" length="1000" comment="Plain"/>
+        <column xsi:type="varchar" name="OneColour" nullable="true" length="1000" comment="OneColour"/>
+        <column xsi:type="varchar" name="TwoColour" nullable="true" length="1000" comment="TwoColour"/>
+        <column xsi:type="varchar" name="ThreeColour" nullable="true" length="1000" comment="ThreeColour"/>
+        <column xsi:type="varchar" name="FullColour" nullable="true" length="1000" comment="FullColour"/>
+        <column xsi:type="varchar" name="EEE" nullable="true" length="1000" comment="EEE"/>
+        <column xsi:type="varchar" name="ImageURL" nullable="true" length="1000" comment="ImageURL"/>
+
+        <column name="status" xsi:type="int"  unsigned="true" nullable="false" identity="false" default="1" comment="Status enable:1/disable:0/processing:2/complete:3"/>
+        <column name="created_at" xsi:type="timestamp" comment="Creation Time" default="CURRENT_TIMESTAMP"/>
+        <column name="updated_at" xsi:type="timestamp" on_update="true" nullable="true" comment="Last updated Time"/>
+
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="entity_id"/>
+        </constraint>
+    </table>
+</schema>

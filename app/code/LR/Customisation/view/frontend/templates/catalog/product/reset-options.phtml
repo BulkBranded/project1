@@ -29,12 +29,12 @@
             $block->getProduct()->getCustomAttribute('minimum_qty')->getValue(): 1 ?>;
             maxqty = <?=  /* @noEscape */$block->getProduct()->getCustomAttribute('maximum_qty') ?
             $block->getProduct()->getCustomAttribute('maximum_qty')->getValue() : 100 ?>;
-            $(function() {
-                function getFormattedPrice (price) {
-                    //todo add format data
-                    return priceUtils.formatPrice(price);
-                };
 
+            function getFormattedPrice (price) {
+                return priceUtils.formatPrice(price);
+            };
+
+            function qtyPriceSlider () {
                 $("#price-range").slider({
                     step: 1,
                     range: "min", 
@@ -44,9 +44,9 @@
                     slide: function(event, ui) {
                         var e = localStorage.getItem("promoBrandCurrentVat"),
                             str = ("exc" === e) ? $(
-                            '[data-role="priceBox"] .price-including-tax .price'
-                            ).text() : $(
                             '[data-role="priceBox"] .price-excluding-tax .price'
+                            ).text() : $(
+                            '[data-role="priceBox"] .price-including-tax .price'
                             ).text();
                             price = str.slice(1, str.length - 3).replace(",", '');
                         $("#qty").val(ui.values[0]);
@@ -54,10 +54,13 @@
                         $('.product-netprice .total-price').text(getFormattedPrice(price * ui.values[0]));
                     }
                 });
-            });
+            };
+            
+            qtyPriceSlider();
 
             $(".product-option-reset").click(function(){
                 $("#product_addtocart_form").trigger("reset");
+                qtyPriceSlider();
                 if($('.swatch-attribute').hasClass("color")){
                     if(!$('.swatch-option').first().hasClass("selected")) {
                         $('.swatch-option').first().trigger('click');
@@ -65,9 +68,12 @@
                 }
             });
 
-            $("#select_8").on("change",function(){
-                var GetValue= $("#select_8").val();
-                $("#options_10_text").val(GetValue);
+            $('.field select').on('change', function() {
+                var text = $(this).parents('.field').children('label').children('span').text();
+                if (text.includes('Position')) {
+                    $(this).parents('.field').next().children('.control').children('input').attr("disabled", true);
+                    $(this).parents('.field').next().children('.control').children('input').val($(this).val());
+                }
             });
         });
     });
