@@ -71,7 +71,7 @@
             $('.field select').on('change', function() {
                 var text = $(this).parents('.field').children('label').children('span').text();
                 if (text.includes('Position')) {
-                    $(this).parents('.field').next().children('.control').children('input').attr("disabled", true);
+                    // $(this).parents('.field').next().children('.control').children('input').attr("disabled", true);
                     $(this).parents('.field').next().children('.control').children('input').val($(this).val());
                 }
             });
