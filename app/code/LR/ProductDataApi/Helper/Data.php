@@ -155,11 +155,14 @@ class Data extends AbstractHelper
     {
         $smProductCode = $this->prepareCurlRequest("smcode/lists", "GET");
         if (!empty($smProductCode) && isset($smProductCode['data']) && $smProductCode['status'] == 1) {
-            $counter = 0;
             foreach ($smProductCode['data'] as $productCode) {
-                $model = $this->productDataApiFactory->create();
-                $model->setData('SMCode', $productCode['SMCode']);
-                $model->save();
+                $collection = $this->productDataApiFactory->create()->getCollection()
+                            ->addFieldToFilter('SMCode', $productCode['SMCode']);
+                if (empty($collection->getData())) {
+                    $model = $this->productDataApiFactory->create();
+                    $model->setData('SMCode', $productCode['SMCode']);
+                    $model->save();
+                }
             }
         }
     }
@@ -174,7 +177,7 @@ class Data extends AbstractHelper
         $collection = $this->productDataApiFactory->create()->getCollection()
                             ->addFieldToFilter('status', Status::STATUS_ENABLE)
                             ->addFieldToFilter('ProductReferenceID', array('null' => true))
-                            ->setPageSize(20);
+                            ->setPageSize(200);
 
         if (count($collection->getData()) > 0) {
             foreach ($collection->getData() as $productCode) {
@@ -215,9 +218,14 @@ class Data extends AbstractHelper
                 $productMerge1 = array_merge($productDataArray, $productPriceListArray);
                 $productFullData = array_merge($productMerge1, $productImageArray);
 
-                $model = $this->productDataApiFactory->create();
-                $model->setData($productFullData);
-                $model->setStatus(Status::STATUS_PROCESSING)->save();
+                try {
+                    $model = $this->productDataApiFactory->create()->load($productCode['entity_id']);
+                    $model->setData($productFullData);
+                    $model->setEntityId($productCode['entity_id']);
+                    $model->setStatus(Status::STATUS_PROCESSING)->save();
+                } catch(\Exception $e){
+                    echo "Error: " . $e->getMessage();exit;
+                }
             }
         }
     }
@@ -229,13 +237,13 @@ class Data extends AbstractHelper
      */
     public function clearProductData()
     {
-        $collection = $this->productDataApiFactory->create()->getCollection()
+        /* $collection = $this->productDataApiFactory->create()->getCollection()
                             ->addFieldToFilter('status', Status::STATUS_COMPLETED)->load();
         if (count($collection->getData()) > 0) {
             foreach ($collection as $productCode) {
                 $productCode->delete();
             }
-        }
+        } */
     }
 
     /**
@@ -247,8 +255,7 @@ class Data extends AbstractHelper
     {
         $collection = $this->productDataApiFactory->create()->getCollection()
                             ->addFieldToFilter('status', Status::STATUS_PROCESSING)
-                            // ->addFieldToFilter('SMCode', 'SM75867')
-                            ->setPageSize(5);
+                            ->setPageSize(50);
 
         if (count($collection->getData()) > 0) {
 
@@ -300,12 +307,16 @@ class Data extends AbstractHelper
                             false
                         );
                     }
-                    $configProduct->save();
+                    try {
+                        $configProduct->save();
+                    } catch(\Exception $e) {
+
+                    }
+
                     $model = $this->productDataApiFactory->create()->load($productCode['entity_id']);
                     $model->setStatus(Status::STATUS_COMPLETED)->save();
 
                 } catch (Exception $ex) {
-                    echo "Exception called" . "\n";
                     echo '<pre>';
                     print_r($ex->getMessage());
                     exit;

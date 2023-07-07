@@ -39,5 +39,8 @@
         <constraint xsi:type="primary" referenceId="PRIMARY">
             <column name="entity_id"/>
         </constraint>
+        <constraint xsi:type="unique" referenceId="PRODUCT_SMCODE">
+            <column name="SMCode"/>
+        </constraint>
     </table>
 </schema>
