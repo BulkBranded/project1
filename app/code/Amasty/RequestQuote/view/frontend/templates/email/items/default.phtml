@@ -1,0 +1,37 @@
+<?php
+/**
+ * @author Amasty Team
+ * @copyright Copyright (c) 2023 Amasty (https://www.amasty.com)
+ * @package Request a Quote Base for Magento 2
+ */
+/** @var $block \Amasty\RequestQuote\Block\Email\Items\Renderer\DefaultRenderer */
+/** @var \Magento\Framework\Escaper $escaper */
+/** @var $item \Magento\Quote\Model\Quote\Item */
+$item = $block->getItem();
+$quote = $item->getQuote();
+?>
+<tr>
+    <td class="item-info<?php if ($block->getItemOptions()): ?> has-extra<?php endif; ?>" colspan="3">
+        <p class="product-name"><?= $escaper->escapeHtml($item->getName()) ?></p>
+        <p class="sku"><?= /* @noEscape */  __('SKU') ?>: <?= $escaper->escapeHtml($item->getSku()) ?></p>
+        <?php if ($block->getItemOptions()): ?>
+            <dl class="item-options">
+                <?php foreach ($block->getItemOptions() as $option): ?>
+                    <dt><strong><em><?= /* @noEscape */  $option['label'] ?></em></strong></dt>
+                    <dd>
+                        <?= /* @noEscape */  nl2br($option['value']) ?>
+                    </dd>
+                <?php endforeach; ?>
+            </dl>
+        <?php endif; ?>
+        <?php $addInfoBlock = $block->getProductAdditionalInformationBlock(); ?>
+        <?php if ($addInfoBlock): ?>
+            <?= $addInfoBlock->setItem($item)->toHtml() ?>
+        <?php endif; ?>
+        <?= $escaper->escapeHtml($item->getDescription()) ?>
+    </td>
+    <td class="item-qty"><?= /* @noEscape */  $item->getQty() * 1 ?></td>
+    <td class="item-price">
+        <?= /* @noEscape */  $block->getUnitPriceHtml($item) ?>
+    </td>
+</tr>

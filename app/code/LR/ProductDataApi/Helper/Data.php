@@ -7,6 +7,13 @@ use Magento\Framework\App\Helper\Context;
 use Magento\Setup\Module\Dependency\Parser\Composer\Json;
 use LR\ProductDataApi\Model\ProductDataApiFactory;
 use LR\ProductDataApi\Model\Config\Source\Status;
+use \Magento\Framework\App\ResourceConnection;
+use \Magento\Catalog\Model\ProductFactory;
+use \Magento\Eav\Setup\EavSetupFactory;
+use \Magento\Eav\Api\AttributeRepositoryInterface;
+use \Magento\Catalog\Api\ProductRepositoryInterface;
+use \Magento\Framework\Filesystem\Io\File;
+use \Magento\Framework\App\Filesystem\DirectoryList;
 
 class Data extends AbstractHelper
 {
@@ -27,20 +34,74 @@ class Data extends AbstractHelper
     protected $productDataApiFactory;
 
     /**
-     * Init Objects
-     *
+     * @var ProductFactory
+     */
+    private $productFactory;
+
+    /**
+     * @var ResourceConnection
+     */
+    private $resourceConnection;
+
+    /**
+     * @var EavSetupFactory
+     */
+    private $eavSetupFactory;
+
+    /**
+     * @var AttributeRepositoryInterface
+     */
+    private $attributeRepositoryInterface;
+
+    /**
+     * @var ProductRepositoryInterface
+     */
+    private $productRepositoryInterface;
+
+    /**
+     * @var File
+     */
+    private $file;
+
+    /**
+     * @var DirectoryList
+     */
+    private $directoryList;
+
+    /**
      * @param Context $context
      * @param Curl $curl
      * @param ProductDataApiFactory $productDataApiFactory
+     * @param ProductFactory $productFactory
+     * @param ResourceConnection $resourceConnection
+     * @param EavSetupFactory $eavSetupFactory
+     * @param AttributeRepositoryInterface $attributeRepositoryInterface
+     * @param ProductRepositoryInterface $productRepositoryInterface
+     * @param File $file
+     * @param DirectoryList $directoryList
      */
     public function __construct(
         Context $context,
         Curl $curl,
-        ProductDataApiFactory $productDataApiFactory
+        ProductDataApiFactory $productDataApiFactory,
+        ProductFactory $productFactory,
+        ResourceConnection $resourceConnection,
+        EavSetupFactory $eavSetupFactory,
+        AttributeRepositoryInterface $attributeRepositoryInterface,
+        ProductRepositoryInterface $productRepositoryInterface,
+        File $file,
+        DirectoryList $directoryList
     ) {
         parent::__construct($context);
         $this->curl = $curl;
         $this->productDataApiFactory = $productDataApiFactory;
+        $this->productFactory = $productFactory;
+        $this->resourceConnection = $resourceConnection;
+        $this->eavSetupFactory = $eavSetupFactory;
+        $this->attributeRepositoryInterface = $attributeRepositoryInterface;
+        $this->productRepositoryInterface = $productRepositoryInterface;
+        $this->file = $file;
+        $this->directoryList = $directoryList;
     }
 
     /**
@@ -151,8 +212,8 @@ class Data extends AbstractHelper
                     $productImageArray = $smProductImageData['data'][0];
                 }
 
-                $productMerge1 = array_merge($productDataArray,$productPriceListArray);
-                $productFullData = array_merge($productMerge1,$productImageArray);
+                $productMerge1 = array_merge($productDataArray, $productPriceListArray);
+                $productFullData = array_merge($productMerge1, $productImageArray);
 
                 $model = $this->productDataApiFactory->create();
                 $model->setData($productFullData);
@@ -185,50 +246,70 @@ class Data extends AbstractHelper
     public function createProductAndTemplate()
     {
         $collection = $this->productDataApiFactory->create()->getCollection()
-                            ->addFieldToFilter('status', Status::STATUS_PROCESSING);//->setPageSize(20);
-        echo "<pre/>";
-        print_r($collection->getData());exit;
+                            ->addFieldToFilter('status', Status::STATUS_PROCESSING)
+                            // ->addFieldToFilter('SMCode', 'SM75867')
+                            ->setPageSize(5);
 
         if (count($collection->getData()) > 0) {
 
             foreach ($collection->getData() as $productCode) {
-                $productObject = $objectManager->create('\Magento\Catalog\Model\Product');
-                $configurable_product->setSku($productCode['SMCode']);
-                $configurable_product->setName($productCode['ProductName']);
-                $configurable_product->setAttributeSetId(4);
-                $configurable_product->setStatus(1);
-                $configurable_product->setTypeId('configurable');
-                $configurable_product->setPrice(100);
-                $configurable_product->setWebsiteIds(array(1));
-                $configurable_product->setCategoryIds(array(2));
-                $configurable_product->setStockData(array(
-                    'use_config_manage_stock' => 0,
-                    'manage_stock' => 1,
-                    'is_in_stock' => 1,
-                        )
-                );
+                $associatedproductids = $this->createSimpleProduct($productCode);
 
-                $color_attr_id = $configurable_product->getResource()->getAttribute('color')->getId();
-                $configurable_product->getTypeInstance()->setUsedProductAttributeIds(array($color_attr_id), $configurable_product);
-                $configurableAttributesData = $configurable_product->getTypeInstance()->getConfigurableAttributesAsArray($configurable_product);
-                $configurable_product->setCanSaveConfigurableAttributes(true);
-                $configurable_product->setConfigurableAttributesData($configurableAttributesData);
-                $configurableProductsData = array();
-                $configurable_product->setConfigurableProductsData($configurableProductsData);
+                $configProduct = $this->productFactory->create();
+                $configProduct->setSku($productCode['SMCode'])
+                    ->setName($productCode['ProductName'])
+                    ->setAttributeSetId(4)
+                    ->setStatus(1)
+                    ->setTypeId('configurable')
+                    ->setPrice(100)
+                    ->setVisibility(4)
+                    ->setWebsiteIds([1])
+                    ->setCategoryIds([2,3,4,5,6,7,8,9])
+                    ->setData('priceRange', $productCode['PriceRange'])
+                    ->setData('leadTime', $productCode['LeadTime'])
+                    ->setData('printArea', $productCode['PrintArea'])
+                    ->setData('printSize', $productCode['PrintSize'])
+                    ->setData('printMethod', $productCode['PrintMethod'])
+                    ->setDescription($productCode['ProductDescription'])
+                    ->setStockData([
+                        'use_config_manage_stock' => 0,
+                        'manage_stock' => 1,
+                        'is_in_stock' => 1,
+                        'qty' => 100
+                    ]);
+
+                $colorAttrId = $configProduct->getResource()->getAttribute('color')->getId();
+                $configProduct->getTypeInstance()->setUsedProductAttributeIds([$colorAttrId], $configProduct);
+                $configurableAttributesData = $configProduct->getTypeInstance()->getConfigurableAttributesAsArray($configProduct);
+                $configProduct->setCanSaveConfigurableAttributes(true);
+                $configProduct->setConfigurableAttributesData($configurableAttributesData);
+                $configurableProductsData = [];
+                $configProduct->setConfigurableProductsData($configurableProductsData);
                 try {
-                    $configurable_product->save();
+                    $configProduct->setAssociatedProductIds($associatedproductids);
+                    $configProduct->setCanSaveConfigurableAttributes(true);
+                    $tmpDir = $this->directoryList->getPath(DirectoryList::MEDIA) . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR;
+                    $this->file->checkAndCreateFolder($tmpDir);
+                    $newFileName = $tmpDir . baseName(trim($productCode['ImageURL'], '"'));
+                    $result = $this->file->read(trim($productCode['ImageURL'], '"'), $newFileName);
+                    if ($result) {
+                        $configProduct->addImageToMediaGallery(
+                            $newFileName,
+                            ['image', 'small_image', 'thumbnail'],
+                            false,
+                            false
+                        );
+                    }
+                    $configProduct->save();
+                    $model = $this->productDataApiFactory->create()->load($productCode['entity_id']);
+                    $model->setStatus(Status::STATUS_COMPLETED)->save();
+
                 } catch (Exception $ex) {
+                    echo "Exception called" . "\n";
                     echo '<pre>';
                     print_r($ex->getMessage());
                     exit;
                 }
-
-                $productId = $configurable_product->getId();
-
-                $this->createSimpleProduct();
-
-                echo "<pre/>";
-                print_r($productCode);exit;
             }
         }
     }
@@ -236,20 +317,112 @@ class Data extends AbstractHelper
     /**
      * Will create a simple product with data
      *
-     * @return void
+     * @param array $rowData
+     * @return array
      */
-    public function createSimpleProduct()
+    public function createSimpleProduct($rowData)
     {
+        if (!isset($rowData['ActualColours']) || (isset($rowData['ActualColours']) && !$rowData['ActualColours'])) {
+            return [];
+        }
+        $colors = explode(',', $rowData['ActualColours']);
+        $colors = array_map('trim', $colors);
+        $newColors = array_diff($colors, $this->getExistingOptions());
+        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
 
+        if (count($newColors)) {
+            $colorAttrId = $this->attributeRepositoryInterface->get(
+                \Magento\Catalog\Model\Product::ENTITY,
+                'color'
+            )->getAttributeId();
+
+            foreach ($newColors as $key => $option) {
+                $eavSetup = $this->eavSetupFactory->create();
+                $data = [
+                    'attribute_id' => $colorAttrId,
+                    'value' => [
+                        [
+                            0 => trim($option)
+                        ]
+                    ]
+                ];
+                $eavSetup->addAttributeOption($data);
+            }
+        }
+
+        $simpleProductIds = [];
+        $colorOptions = array_flip($this->getExistingOptions());
+        foreach ($colors as $key => $color) {
+            $product = $this->productFactory->create();
+            $product->setSku($rowData['SMCode']."-".$color)
+                ->setName($rowData['ProductName']." ". $color)
+                ->setAttributeSetId(4)
+                ->setStatus(1)
+                ->setVisibility(1)
+                ->setTypeId('simple')
+                ->setPrice(100)
+                ->setWebsiteIds([1])
+                ->setCategoryIds([2,3,4,5,6,7,8,9])
+                ->setData('color', $colorOptions[$color])
+                ->setStockData([
+                    'use_config_manage_stock' => 0,
+                    'manage_stock' => 1,
+                    'is_in_stock' => 1,
+                    'qty' => 100
+                ]);
+            try {
+                $product = $this->productRepositoryInterface->save($product);
+                $simpleProductIds[] = $product->getId();
+            } catch (Exception $ex) {
+                echo '<pre>';
+                print_r($ex->getMessage());
+                exit;
+            }
+        }
+
+        return $simpleProductIds;
     }
 
     /**
      * Will create a configurable product with data
      *
-     * @return void
+     * @param array $associatedproductids
+     * @return self
      */
-    public function createConfigurableProduct()
+    public function createConfigurableProduct($associatedproductids)
     {
 
+    }
+
+    /**
+     * Return Existing product options
+     *
+     * @return array
+     */
+    private function getExistingOptions() : array
+    {
+        $productEntity = \Magento\Catalog\Model\Product::ENTITY;
+        $connection = $this->resourceConnection->getConnection();
+
+        $select = $connection->select()
+                ->from(['EA' => "eav_attribute"], ["EAO.option_id", "EAOV.value"])
+                ->join(
+                    ['EET' => 'eav_entity_type'],
+                    "EET.entity_type_id = EA.entity_type_id AND EET.entity_type_code = '{$productEntity}'",
+                    []
+                )
+                ->join(
+                    ['EAO' => 'eav_attribute_option'],
+                    "EAO.attribute_id = EA.attribute_id",
+                    []
+                )
+                ->join(
+                    ['EAOV' => 'eav_attribute_option_value'],
+                    "EAOV.option_id = EAO.option_id",
+                    []
+                )
+                ->where("EA.attribute_code = 'color'");
+
+        return $connection->fetchPairs($select);
     }
 }

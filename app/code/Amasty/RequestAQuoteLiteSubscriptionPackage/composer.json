@@ -1,0 +1,27 @@
+{
+    "name": "amasty/module-request-a-quote-lite-subscription-package",
+    "description": "Request a Quote Lite Subscription Package by Amasty",
+    "require": {
+        "php": ">=7.3",
+        "amasty/base": ">=1.14.2",
+        "amasty/module-request-quote": "*",
+        "amasty/module-hide-price": "*"
+    },
+    "suggest": {
+        "amasty/module-request-a-quote-graphql": "Install module-request-a-quote-graphql module to activate Graphql and Request a Quote compatibility"
+    },
+    "homepage": "https://amasty.com/",
+    "type": "magento2-module",
+    "version": "2.5.0",
+    "license": [
+        "Commercial"
+    ],
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Amasty\\RequestAQuoteLiteSubscriptionPackage\\": ""
+        }
+    }
+}

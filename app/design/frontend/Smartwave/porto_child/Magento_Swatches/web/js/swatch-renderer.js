@@ -497,7 +497,7 @@ define([
             $widget._EmulateSelected($.parseQuery());
             $widget._EmulateSelected($widget._getSelectedAttributes());
 
-            if($('.swatch-attribute').hasClass("color")){
+            if($('.catalog-product-view .swatch-attribute').hasClass("color")){
                 $('.swatch-option').first().trigger('click');
             }
         },

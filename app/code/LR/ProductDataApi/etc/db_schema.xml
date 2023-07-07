@@ -13,7 +13,7 @@
         <column xsi:type="varchar" name="PrintArea" nullable="true" length="200" comment="PrintArea"/>
         <column xsi:type="varchar" name="PrintSize" nullable="true" length="200" comment="PrintSize"/>
         <column xsi:type="varchar" name="PrintMethod" nullable="true" length="200" comment="PrintMethod"/>
-        <column xsi:type="varchar" name="ProductDescription" nullable="true" length="3000" comment="ProductDescription"/>
+        <column xsi:type="varchar" name="ProductDescription" nullable="true" length="1024" comment="ProductDescription"/>
         <column xsi:type="varchar" name="AdditionalInformation" nullable="true" length="200" comment="AdditionalInformation"/>
         <column xsi:type="varchar" name="Unit" nullable="true" length="200" comment="Unit"/>
         <column xsi:type="varchar" name="IsPlain" nullable="true" length="200" comment="IsPlain"/>

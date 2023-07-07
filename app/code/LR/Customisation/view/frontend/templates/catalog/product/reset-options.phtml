@@ -61,7 +61,7 @@
             $(".product-option-reset").click(function(){
                 $("#product_addtocart_form").trigger("reset");
                 qtyPriceSlider();
-                if($('.swatch-attribute').hasClass("color")){
+                if($('.catalog-product-view .swatch-attribute').hasClass("color")){
                     if(!$('.swatch-option').first().hasClass("selected")) {
                         $('.swatch-option').first().trigger('click');
                     }

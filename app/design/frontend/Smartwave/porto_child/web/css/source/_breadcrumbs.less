@@ -1,0 +1,87 @@
+// /**
+//  * Copyright © 2015 Magento. All rights reserved.
+//  * See COPYING.txt for license details.
+//  */
+
+//
+//  Common
+//  _____________________________________________
+
+& when (@media-common = true) {
+    .page-wrapper > .breadcrumbs {
+        padding: 0;
+        background-color: @breadcrumbs__background-color;
+        color: @breadcrumbs__font-color;
+        font-size: .75rem;
+        margin-bottom: 0!important;
+        
+        &:after {
+            display: none;
+        }
+
+        .items {
+          padding: 12px 10px;
+          display: flex;
+          flex-wrap: wrap;
+          font-size: 1em;
+          color: inherit;
+          >li {
+            text-shadow: none;
+            display: flex;
+            align-items: center;
+            margin: 0;
+            color: #999;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 24px;
+            &.home a {
+              position: relative;
+              width: 14px;
+              text-indent: -9999px;
+              &:after {
+                font-family: porto-icons;
+                content: "\e883";
+                float: left;
+                text-indent: 0;
+              }
+            }
+            strong {
+                color: #00BA98;
+            }
+            &:not(:last-child)::after {
+              position: relative;
+              content: "\e81a";
+              font-family: porto-icons;
+              right: -1px;
+              display: block;
+              float: right;
+              margin: 0 4px;
+              width: 20px;
+              text-align: center;
+              font-style: normal;
+              font-size: 12px;
+              line-height: inherit;
+              color: #00BA98;
+            }
+            strong {
+              font-weight: inherit;
+            }
+          }
+        }
+        a, a:hover, a:focus {
+            color: @breadcrumbs__font-color;
+        }
+        .item:not(:last-child):after {
+            line-height: 15px;
+        }
+    }
+}
+
+//
+//  Mobile
+//  _____________________________________________
+
+.media-width(@extremum, @break) when (@extremum = 'max') and (@break = @screen__m) {
+    .breadcrumbs { }
+}
