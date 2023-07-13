@@ -41,16 +41,27 @@
             <?= $block->getBlockHtml('product.info.options.wrapper.bottom') ?>
             <!-- For Popup model -->
             <div class="click-actions">
-                <button type="button" class="download-quotation" >
+                <?php
+                    $popupClass = (!$customerLoggedIn) ? "signup" : "download-quotation amquote-addto-button";
+                ?>
+                <button type="button" class="pdf-download-btn <?= $popupClass ?>">
                     <span><?=  /* @noEscape */ __("Download PDF Quotation") ?></span>
                 </button>
             </div>
-            <div id="quotation-details-form" style="display:none;">
-                <?php if (!$customerLoggedIn): ?>
-                    <button type="button" class="signup" >
-                        <span><?=  /* @noEscape */ __("Login") ?></span>
-                    </button>
-                <?php endif; ?>
+            <div id="quotation-details-form" style="display:none;"
+                role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+                <div class="quotation-details-content" id ="quotation-details-content"></div>
+                <div class="quotation-details-footer" id ="quotation-details-footer">
+                    <?php if (!$customerLoggedIn): ?>
+                        <button type="button" class="signup">
+                            <span><?=  /* @noEscape */ __("Login") ?></span>
+                        </button>
+                    <?php else: ?>
+                        <button type="button" id="download-pdf" class="download-pdf">
+                            <span><?=  /* @noEscape */ __("Download PDF Quotation") ?></span>
+                        </button>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
@@ -67,25 +78,34 @@
     ) {
         var options = {
             type: 'popup',
-            responsive: false,
+            responsive: true,
             innerScroll: true,
             title: $('.page-title-wrapper.product .page-title .base').text(),
-            modalClass: 'download-pdf-modal',
-            buttons: [{
-                text: $.mage.__('Proceed'),
-                class: '',
-                click: function () {
-                    $("#product-options-wrapper").insertBefore("#customisation_right");
-                    this.closeModal();
+            clickableOverlay: false,
+            buttons: [
+                {
+                    text: $.mage.__('Close'),
+                    class: '',
+                    click: function () {
+                        $("#product-options-wrapper").insertBefore("#customisation_right");
+                        this.closeModal();
+                    }
                 }
-            }]
+            ]
         };
 
         var popup = modal(options, $('#quotation-details-form'));
-            $(".download-quotation").on('click',function(){
-            $("#product-options-wrapper").appendTo("#quotation-details-form");
+        $(".download-quotation").on('click',function(){
+            $("#product-options-wrapper").appendTo("#quotation-details-content");
             $("#quotation-details-form").modal("openModal");
         });
     }
 );
+</script>
+<script type="text/x-magento-init">
+    {
+        "*": {
+            "LR_Customisation/js/quotation/custom-js": {}
+        }
+    }
 </script>

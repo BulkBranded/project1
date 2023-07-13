@@ -65,7 +65,6 @@ define(['jquery', 'priceUtils', 'priceBox'], function ($, utils) {
             ) {
                 if (priceBox.priceBox('option').priceConfig.optionTemplate) {
                     this._setOption('optionTemplate', priceBox.priceBox('option').priceConfig.optionTemplate);
-                    console.log('optionTemplate', priceBox)
                 }
                 this._setOption('priceFormat', priceBox.priceBox('option').priceConfig.priceFormat);
             }
@@ -95,9 +94,12 @@ define(['jquery', 'priceUtils', 'priceBox'], function ($, utils) {
 
             var e = localStorage.getItem("promoBrandCurrentVat"),
                 qty = $("#qty").val(),
-                str = ("exc" === e) ? $('[data-role="priceBox"] .price-including-tax .price').text() : $('[data-role="priceBox"] .price-excluding-tax .price').text(),
+                str = ("exc" === e) ? $(
+                    '[data-role="priceBox"] .price-excluding-tax .price'
+                    ).text() : $(
+                    '[data-role="priceBox"] .price-including-tax .price'
+                    ).text(),
                 priceValue = str.slice(1, str.length - 3).replace(",", '');
-
             $('.product-netprice .total-price').text(getFormattedPrice(priceValue * qty));
         }
     };

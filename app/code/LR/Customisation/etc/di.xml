@@ -20,4 +20,6 @@
             </argument>
         </arguments>
     </type>
+    <preference for="\Amasty\RequestQuote\Controller\Cart\Add" type="LR\Customisation\Controller\Cart\Add"/>
+    <preference for="\Amasty\RequestQuote\Block\Account\Quote\Items" type="LR\Customisation\Block\Account\Quote\Items"/>
 </config>

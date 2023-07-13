@@ -12,10 +12,10 @@
 
         <job name="productdataapi_clear_records" method="execute" instance="LR\ProductDataApi\Cron\ClearRecords">
             <schedule>0 1 * * 0</schedule>
-        </job>
+        </job> -->
 
         <job name="productdataapi_create_product_and_template" method="execute" instance="LR\ProductDataApi\Cron\CreateProductAndTemplate">
             <schedule>* * * * *</schedule>
-        </job> -->
+        </job>
     </group>
 </config>

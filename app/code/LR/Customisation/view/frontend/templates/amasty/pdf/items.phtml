@@ -1,0 +1,62 @@
+<?php
+/**
+ * @author Amasty Team
+ * @copyright Copyright (c) 2023 Amasty (https://www.amasty.com)
+ * @package Request a Quote Base for Magento 2
+ */ /** @var \Amasty\RequestQuote\Block\Pdf\Items $block */ ?>
+<?php /** @var \Magento\Framework\Escaper $escaper */ ?>
+<div class="order-details-items ordered">
+    <div class="table-wrapper order-items">
+        <table id="my-orders-table"
+               class="data table table-order-items"
+               summary="<?= $escaper->escapeHtml(__('Items Ordered')) ?>">
+            <caption class="table-caption"><?= $escaper->escapeHtml(__('Items Ordered')) ?></caption>
+            <thead>
+            <tr class="am-quotes-head">
+                <th class="col qty"><?= $escaper->escapeHtml(__('Pos')) ?></th>
+                <th class="col qty"><?= $escaper->escapeHtml(__('Qty')) ?></th>
+                <th class="col price"><?= $escaper->escapeHtml(__('Unit Price NET')) ?></th>
+                <th class="col price"><?= $escaper->escapeHtml(__('Unit')) ?></th>
+                <th class="col name"><?= $escaper->escapeHtml(__('Product Description')) ?></th>
+                <th class="col subtotal"><?= $escaper->escapeHtml(__('Total Price NET')) ?></th>
+            </tr>
+            </thead>
+            <?php $items = $block->getItems(); ?>
+            <?php $pos = 1; ?>
+            <?php foreach ($items as $item): ?>
+                <?php if ($item->getParentItem()) {
+                    continue;
+                } ?>
+                <tbody>
+                <?= $block->getItemHtml($item, $pos) ?>
+                <?php $pos++; ?>
+                </tbody>
+                <tbody class="quote-item-notes">
+                <?php if ($item->getNotes()): ?>
+                    <tr>
+                        <td colspan="3" class="amquote-cell-container">
+                            <?php if ($item->getNotes()->getCustomerNote()): ?>
+                                <?= $escaper->escapeHtml(__('Customer Note:')) ?>
+                                <div class="item-note amquote-note">
+                                    <?= /* @noEscape */ nl2br($item->getNotes()->getCustomerNote()) ?>
+                                </div>
+                            <?php endif;?>
+                        </td>
+                        <td colspan="3" class="amquote-cell-container">
+                            <?php if ($item->getNotes()->getAdminNote()): ?>
+                                <?= $escaper->escapeHtml(__('Administrator Note:')) ?>
+                                <div class="item-note amquote-note">
+                                    <?= /* @noEscape */ nl2br($item->getNotes()->getAdminNote()) ?>
+                                </div>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                <?php endif; ?>
+                </tbody>
+            <?php endforeach; ?>
+            <tfoot>
+            <?= $block->getChildHtml('quote_totals') ?>
+            </tfoot>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,64 @@
+<?php
+/**
+ * @author Amasty Team
+ * @copyright Copyright (c) 2023 Amasty (https://www.amasty.com)
+ * @package Request a Quote Base for Magento 2
+ */
+/** @var \Magento\Checkout\Block\Cart\Item\Renderer $block */
+$item = $block->getItem();
+?>
+<tr id="order-item-row-<?= $escaper->escapeHtml($item->getId()) ?>">
+    <td class="col pos" data-th="<?= $escaper->escapeHtml(__('Qty')) ?>">
+        <?= $block->getPos() ?>
+    </td>
+    <td class="col qty" data-th="<?= $escaper->escapeHtml(__('Qty')) ?>">
+        <span><?= $escaper->escapeHtml($block->getQty()) ?></span>
+    </td>
+    <td class="col price qty" data-th="<?= $escaper->escapeHtml(__('Original Price')) ?>">
+        <span class="price-excluding-tax">
+            <span class="cart-price">
+                <span class="price">
+                    <?= $block->getOriginalPriceHtml($item) ?>
+                </span>
+            </span>
+        </span>
+    </td>
+    <td class="col unit"
+        data-th="<?= $escaper->escapeHtml(__('UNIT')) ?>">
+            Piece
+    </td>
+    <td class="col name" data-th="<?= $escaper->escapeHtml(__('Product Name')) ?>">
+        <strong class="product name product-item-name"><?= $escaper->escapeHtml($item->getName()) ?></strong>
+        <dl>
+            <dt><b>Product Number</b> : <?= $escaper->escapeHtml($item->getSku()) ?></dt>
+        </dl>
+        <?php if ($options = $block->getOptionList()): ?>
+            <dl class="item-options">
+                <?php foreach ($options as $option): ?>
+                    <?php $_formatedOptionValue = $block->getFormatedOptionValue($option) ?>
+                    <?php
+                    if (isset($_formatedOptionValue['full_view'])) {
+                        $value = $_formatedOptionValue['full_view'];
+                    } else {
+                        $value = $_formatedOptionValue['value'];
+                    }
+                    ?>
+                    <dt><b><?= $escaper->escapeHtml($option['label']) ?></b> : <?= /* @noEscape */ $value ?></dt>
+                <?php endforeach; ?>
+            </dl>
+        <?php endif;?>
+        <?php $addtInfoBlock = $block->getProductAdditionalInformationBlock(); ?>
+        <?php if ($addtInfoBlock): ?>
+            <?= $addtInfoBlock->setItem($item)->toHtml() ?>
+        <?php endif; ?>
+        <?= $escaper->escapeHtml($item->getDescription()) ?>
+    </td>
+    <?php
+    $approvedPrice = $block->getIsApprovedPriceShowed()
+        ? $block->getUnitPriceHtml($item)
+        : $escaper->escapeHtml(__('N/A'));
+    ?>
+    <td class="col subtotal" data-th="<?= $escaper->escapeHtml(__('Subtotal')) ?>">
+        <span><?= $block->getRowTotalHtml($item) ?></span>
+    </td>
+</tr>

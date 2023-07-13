@@ -26,7 +26,7 @@
     require(['jquery', 'Magento_Catalog/js/price-utils', 'jquery/ui'], function($, priceUtils){
         $(document).ready(function(){
             minqty = <?=  /* @noEscape */$block->getProduct()->getCustomAttribute('minimum_qty') ?
-            $block->getProduct()->getCustomAttribute('minimum_qty')->getValue(): 1 ?>;
+            $block->getProduct()->getCustomAttribute('minimum_qty')->getValue() : 1 ?>;
             maxqty = <?=  /* @noEscape */$block->getProduct()->getCustomAttribute('maximum_qty') ?
             $block->getProduct()->getCustomAttribute('maximum_qty')->getValue() : 100 ?>;
 
@@ -42,15 +42,17 @@
                     max: maxqty,
                     values: [0],
                     slide: function(event, ui) {
+                        $("#qty").val(ui.values[0]);
+                        $("#qty").trigger('change');
                         var e = localStorage.getItem("promoBrandCurrentVat"),
                             str = ("exc" === e) ? $(
                             '[data-role="priceBox"] .price-excluding-tax .price'
                             ).text() : $(
                             '[data-role="priceBox"] .price-including-tax .price'
                             ).text();
-                            price = str.slice(1, str.length - 3).replace(",", '');
-                        $("#qty").val(ui.values[0]);
+                            price = str.slice(1).replace(",", '');
                         $('.product-qty .qty-number').text(ui.values[0]);
+                        console.log('price', ui.values[0])
                         $('.product-netprice .total-price').text(getFormattedPrice(price * ui.values[0]));
                     }
                 });

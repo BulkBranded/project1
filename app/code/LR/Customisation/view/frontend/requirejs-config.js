@@ -8,7 +8,8 @@ var config = {
     },
     map: {
         '*': {
-            'jqueryUiSlider': 'LR_Customisation/js/jquery-ui-slider-pips.min'
+            'jqueryUiSlider': 'LR_Customisation/js/jquery-ui-slider-pips.min',
+            quotationPdf: 'LR_Customisation/js/quotation/custom-js'
         },
     },
     shim: {

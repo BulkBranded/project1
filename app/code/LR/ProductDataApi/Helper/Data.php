@@ -14,6 +14,12 @@ use \Magento\Eav\Api\AttributeRepositoryInterface;
 use \Magento\Catalog\Api\ProductRepositoryInterface;
 use \Magento\Framework\Filesystem\Io\File;
 use \Magento\Framework\App\Filesystem\DirectoryList;
+use \MageWorx\OptionTemplates\Model\GroupFactory;
+use \MageWorx\OptionTemplates\Model\OptionSaver;
+use \Magento\Store\Model\Store;
+use \Magento\Store\Model\StoreFactory;
+use \Magento\Framework\Registry;
+use \MageWorx\OptionTemplates\Model\Group\OptionFactory;
 
 class Data extends AbstractHelper
 {
@@ -69,6 +75,31 @@ class Data extends AbstractHelper
     private $directoryList;
 
     /**
+     * @var GroupFactory
+     */
+    private $groupFactory;
+
+    /**
+     * @var OptionSaver
+     */
+    private $optionSaver;
+
+    /**
+     * @var StoreFactory
+     */
+    private $storeFactory;
+
+    /**
+     * @var Registry
+     */
+    private $registry;
+
+    /**
+     * @var OptionFactory
+     */
+    private $optionFactory;
+
+    /**
      * @param Context $context
      * @param Curl $curl
      * @param ProductDataApiFactory $productDataApiFactory
@@ -79,6 +110,11 @@ class Data extends AbstractHelper
      * @param ProductRepositoryInterface $productRepositoryInterface
      * @param File $file
      * @param DirectoryList $directoryList
+     * @param GroupFactory $groupFactory
+     * @param OptionSaver $optionSaver
+     * @param StoreFactory $storeFactory
+     * @param Registry $registry
+     * @param OptionFactory $optionFactory
      */
     public function __construct(
         Context $context,
@@ -90,7 +126,12 @@ class Data extends AbstractHelper
         AttributeRepositoryInterface $attributeRepositoryInterface,
         ProductRepositoryInterface $productRepositoryInterface,
         File $file,
-        DirectoryList $directoryList
+        DirectoryList $directoryList,
+        GroupFactory $groupFactory,
+        OptionSaver $optionSaver,
+        StoreFactory $storeFactory,
+        Registry $registry,
+        OptionFactory $optionFactory
     ) {
         parent::__construct($context);
         $this->curl = $curl;
@@ -102,6 +143,11 @@ class Data extends AbstractHelper
         $this->productRepositoryInterface = $productRepositoryInterface;
         $this->file = $file;
         $this->directoryList = $directoryList;
+        $this->groupFactory = $groupFactory;
+        $this->optionSaver = $optionSaver;
+        $this->storeFactory = $storeFactory;
+        $this->registry = $registry;
+        $this->optionFactory = $optionFactory;
     }
 
     /**
@@ -155,14 +201,11 @@ class Data extends AbstractHelper
     {
         $smProductCode = $this->prepareCurlRequest("smcode/lists", "GET");
         if (!empty($smProductCode) && isset($smProductCode['data']) && $smProductCode['status'] == 1) {
+            $counter = 0;
             foreach ($smProductCode['data'] as $productCode) {
-                $collection = $this->productDataApiFactory->create()->getCollection()
-                            ->addFieldToFilter('SMCode', $productCode['SMCode']);
-                if (empty($collection->getData())) {
-                    $model = $this->productDataApiFactory->create();
-                    $model->setData('SMCode', $productCode['SMCode']);
-                    $model->save();
-                }
+                $model = $this->productDataApiFactory->create();
+                $model->setData('SMCode', $productCode['SMCode']);
+                $model->save();
             }
         }
     }
@@ -177,7 +220,7 @@ class Data extends AbstractHelper
         $collection = $this->productDataApiFactory->create()->getCollection()
                             ->addFieldToFilter('status', Status::STATUS_ENABLE)
                             ->addFieldToFilter('ProductReferenceID', array('null' => true))
-                            ->setPageSize(200);
+                            ->setPageSize(20);
 
         if (count($collection->getData()) > 0) {
             foreach ($collection->getData() as $productCode) {
@@ -218,14 +261,9 @@ class Data extends AbstractHelper
                 $productMerge1 = array_merge($productDataArray, $productPriceListArray);
                 $productFullData = array_merge($productMerge1, $productImageArray);
 
-                try {
-                    $model = $this->productDataApiFactory->create()->load($productCode['entity_id']);
-                    $model->setData($productFullData);
-                    $model->setEntityId($productCode['entity_id']);
-                    $model->setStatus(Status::STATUS_PROCESSING)->save();
-                } catch(\Exception $e){
-                    echo "Error: " . $e->getMessage();exit;
-                }
+                $model = $this->productDataApiFactory->create();
+                $model->setData($productFullData);
+                $model->setStatus(Status::STATUS_PROCESSING)->save();
             }
         }
     }
@@ -237,13 +275,13 @@ class Data extends AbstractHelper
      */
     public function clearProductData()
     {
-        /* $collection = $this->productDataApiFactory->create()->getCollection()
+        $collection = $this->productDataApiFactory->create()->getCollection()
                             ->addFieldToFilter('status', Status::STATUS_COMPLETED)->load();
         if (count($collection->getData()) > 0) {
             foreach ($collection as $productCode) {
                 $productCode->delete();
             }
-        } */
+        }
     }
 
     /**
@@ -255,11 +293,13 @@ class Data extends AbstractHelper
     {
         $collection = $this->productDataApiFactory->create()->getCollection()
                             ->addFieldToFilter('status', Status::STATUS_PROCESSING)
-                            ->setPageSize(50);
+                            // ->addFieldToFilter('SMCode', 'SM75867')
+                            ->setPageSize(1);
 
         if (count($collection->getData()) > 0) {
-
+            $this->registry->register('mageworx_template_create_process', true);
             foreach ($collection->getData() as $productCode) {
+
                 $associatedproductids = $this->createSimpleProduct($productCode);
 
                 $configProduct = $this->productFactory->create();
@@ -271,11 +311,9 @@ class Data extends AbstractHelper
                     ->setPrice(100)
                     ->setVisibility(4)
                     ->setWebsiteIds([1])
-                    ->setCategoryIds([2,3,4,5,6,7,8,9])
+                    ->setCategoryIds([2])
                     ->setData('priceRange', $productCode['PriceRange'])
                     ->setData('leadTime', $productCode['LeadTime'])
-                    ->setData('printArea', $productCode['PrintArea'])
-                    ->setData('printSize', $productCode['PrintSize'])
                     ->setData('printMethod', $productCode['PrintMethod'])
                     ->setDescription($productCode['ProductDescription'])
                     ->setStockData([
@@ -307,12 +345,8 @@ class Data extends AbstractHelper
                             false
                         );
                     }
-                    try {
-                        $configProduct->save();
-                    } catch(\Exception $e) {
-
-                    }
-
+                    $configProduct->save();
+                    $this->addCustomOptions($configProduct, $productCode);
                     $model = $this->productDataApiFactory->create()->load($productCode['entity_id']);
                     $model->setStatus(Status::STATUS_COMPLETED)->save();
 
@@ -322,6 +356,7 @@ class Data extends AbstractHelper
                     exit;
                 }
             }
+            $this->registry->unregister('mageworx_template_create_process');
         }
     }
 
@@ -339,7 +374,6 @@ class Data extends AbstractHelper
         $colors = explode(',', $rowData['ActualColours']);
         $colors = array_map('trim', $colors);
         $newColors = array_diff($colors, $this->getExistingOptions());
-        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
 
         if (count($newColors)) {
             $colorAttrId = $this->attributeRepositoryInterface->get(
@@ -373,7 +407,7 @@ class Data extends AbstractHelper
                 ->setTypeId('simple')
                 ->setPrice(100)
                 ->setWebsiteIds([1])
-                ->setCategoryIds([2,3,4,5,6,7,8,9])
+                ->setCategoryIds([2])
                 ->setData('color', $colorOptions[$color])
                 ->setStockData([
                     'use_config_manage_stock' => 0,
@@ -435,5 +469,402 @@ class Data extends AbstractHelper
                 ->where("EA.attribute_code = 'color'");
 
         return $connection->fetchPairs($select);
+    }
+
+    /**
+     * Add Custom Options Group to Product
+     *
+     * @param \Magento\Catalog\Model\Product $product
+     * @param array $apiData
+     * @return self
+     */
+    public function addCustomOptions($product, $apiData) : self
+    {
+        // Start Preparing custom options Data
+        $groupData = [
+            "group_id" => "",
+            "title" => $product->getSku(),
+            "productskus" => "",
+            "absolute_cost" => 0,
+            "absolute_price" => 0,
+            "absolute_weight" => 0,
+            "assign_type" => 2,
+            "affect_product_custom_options" => 1,
+            "option_link_fields" => [
+                "cost" => "cost",
+                "weight" => "weight",
+                "price" => "price"
+            ],
+        ];
+
+        $options = [];
+
+        $tierData = (isset($apiData['QuantityBreak']) && $apiData['QuantityBreak'])
+            ? json_decode($apiData['QuantityBreak'], true) : [];
+
+        // Geting max price from price-rang to set price in options value
+        $valuePrice = explode("-", $apiData['PriceRange']);
+        $valuePrice = preg_replace('/[^.0-9]/s', "", $valuePrice[1]);
+
+        if ((isset($apiData['IsPlain']) && (bool)$apiData['IsPlain'])) {
+            if (!isset($options['branding'])) {
+                $options['branding'] = $this->getOptionTemplateData("Branding", 0);
+            }
+            $tierPriceData = (isset($apiData['Plain']) && $apiData['Plain'])
+            ? json_decode($apiData['Plain'], true) : [];
+
+            $options['branding']["values"][] = $this->getValueData("Is Plain", 0, $tierData, $tierPriceData, $valuePrice, 0);
+        }
+
+        if ((isset($apiData['IsColour1']) && (bool)$apiData['IsColour1'])) {
+            if (!isset($options['branding'])) {
+                $options['branding'] = $this->getOptionTemplateData("Branding", 0);
+            }
+            $tierPriceData = (isset($apiData['OneColour']) && $apiData['OneColour'])
+            ? json_decode($apiData['OneColour'], true) : [];
+
+            $options['branding']["values"][] = $this->getValueData("1-Colour", 1, $tierData, $tierPriceData, $valuePrice, 0);
+        }
+
+        if ((isset($apiData['IsColour2']) && (bool)$apiData['IsColour2'])) {
+            if (!isset($options['branding'])) {
+                $options['branding'] = $this->getOptionTemplateData("Branding", 0);
+            }
+            $tierPriceData = (isset($apiData['TwoColour']) && $apiData['TwoColour'])
+            ? json_decode($apiData['TwoColour'], true) : [];
+
+            $options['branding']["values"][] = $this->getValueData("2-Colour", 2, $tierData, $tierPriceData, $valuePrice, 0);
+        }
+
+        if ((isset($apiData['IsColour3']) && (bool)$apiData['IsColour3'])) {
+            if (!isset($options['branding'])) {
+                $options['branding'] = $this->getOptionTemplateData("Branding", 0);
+            }
+            $tierPriceData = (isset($apiData['ThreeColour']) && $apiData['ThreeColour'])
+            ? json_decode($apiData['ThreeColour'], true) : [];
+
+            $options['branding']["values"][] = $this->getValueData("3-Colour", 3, $tierData, $tierPriceData, $valuePrice, 0);
+        }
+
+        if ((isset($apiData['IsColour4']) && (bool)$apiData['IsColour4'])) {
+            if (!isset($options['branding'])) {
+                $options['branding'] = $this->getOptionTemplateData("Branding", 0);
+            }
+            $tierPriceData = (isset($apiData['FullColour']) && $apiData['FullColour'])
+            ? json_decode($apiData['FullColour'], true) : [];
+
+            $options['branding']["values"][] = $this->getValueData("Full Colour", 4, $tierData, $tierPriceData, $valuePrice, 0);
+        }
+
+        $dependency = [
+            ["0","1"],
+            ["0","2"],
+            ["0","3"],
+            ["0","4"]
+        ];
+
+        if ((isset($apiData['PrintArea']) && $apiData['PrintArea'])) {
+            if (!isset($options['PrintArea'])) {
+                $options['PrintArea'] = $this->getOptionTemplateData("Print Area", "1");
+            }
+            $options['PrintArea']["values"][] = $this->getValueData("280x310mm", 0, [], [], $valuePrice, $dependency, 1);
+        }
+
+        if ((isset($apiData['PrintSize']) && $apiData['PrintSize'])) {
+            if (!isset($options['PrintSize'])) {
+                $options['PrintSize'] = $this->getOptionTemplateData("Print Size", 2);
+            }
+            $options['PrintSize']["values"][] = $this->getValueData("380mmL x 420mmH", 0, [], [], $valuePrice, $dependency, 1);
+        }
+
+        foreach ($options as $key => $data) {
+            $groupData['options'][] = $data;
+        }
+
+        // End data preparation
+
+        $this->registry->unregister('mageworx_optiontemplates_group_save');
+        $this->registry->unregister('mageworx_optiontemplates_group_id');
+        $this->registry->register('mageworx_optiontemplates_group_save', true);
+        $group = $this->groupFactory->create();
+        $storeId = Store::DEFAULT_STORE_ID;
+        $store = $this->storeFactory->create()->load($storeId);
+        $group->setStoreId($storeId);
+
+        $this->registry->register('mageworx_optiontemplates_group', $group);
+        $this->registry->register('current_store', $store);
+
+        // Filter prepred Data
+        $data = $this->filterData($groupData);
+        $group->addData($data);
+
+        // Adding product options to group
+        $options = $this->mergeProductOptions(
+            $data['options'],
+            [],
+            []
+        );
+        $group->setOptions($options);
+        $group->setData('options', $options);
+        $group->setCanSaveCustomOptions(1);
+        // Set Product Ids in group
+        $group->setProductsIds([$product->getId()]);
+        $this->registry->unregister('mageworx_optiontemplates_group_id');
+        $this->registry->unregister('mageworx_optiontemplates_group_option_ids');
+        try {
+            // Save Group
+            $group->save();
+            // Save Custom Options and dependancy
+            $this->optionSaver->saveProductOptions(
+                $group,
+                [],
+                OptionSaver::SAVE_MODE_UPDATE
+            );
+            $this->registry->unregister('mageworx_optiontemplates_group_save');
+            $this->registry->unregister('mageworx_optiontemplates_group_id');
+        } catch (\Exception $th) {
+            echo '<pre>';
+            print_r($th->getMessage());
+            print_r($th->getTrace());
+            die;
+        }
+        return $this;
+    }
+
+    /**
+     * Filter Group Options data
+     *
+     * @param array $data
+     * @return array
+     */
+    protected function filterData($data)
+    {
+        if (isset($data['group_id']) && !$data['group_id']) {
+            unset($data['group_id']);
+        }
+
+        if (isset($data['options'])) {
+            $updatedOptions = [];
+            foreach ($data['options'] as $key => $option) {
+                if (!isset($option['option_id'])) {
+                    continue;
+                }
+
+                $optionId = $option['option_id'];
+                if (!$optionId && !empty($option['record_id'])) {
+                    $optionId = $option['record_id'] . '_';
+                }
+                $updatedOptions[$optionId] = $option;
+                if (empty($option['values'])) {
+                    continue;
+                }
+
+                $values                              = $option['values'];
+                $updatedOptions[$optionId]['values'] = [];
+                foreach ($values as $valueKey => $value) {
+                    if (!isset($value['option_type_id'])) {
+                        $valueId                                       = $value['record_id'] . '_';
+                        $updatedOptions[$optionId]['values'][$valueId] = $value;
+                    } else {
+                        $valueId                                       = $value['option_type_id'];
+                        $updatedOptions[$optionId]['values'][$valueId] = $value;
+                    }
+                }
+            }
+
+            $data['options'] = $updatedOptions;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Merge original options, if template is not new, form options and default options for group
+     *
+     * @param array $productOptions form options
+     * @param array $originalOptions original template options
+     * @param array $overwriteOptions default value options
+     * @return array
+     */
+    protected function mergeProductOptions($productOptions, $originalOptions, $overwriteOptions)
+    {
+        if (!is_array($productOptions)) {
+            $productOptions = [];
+        }
+        if (is_array($overwriteOptions)) {
+            $options = array_replace_recursive($productOptions, $overwriteOptions);
+            array_walk_recursive(
+                $options,
+                function (&$item) {
+                    if ($item === "") {
+                        $item = null;
+                    }
+                }
+            );
+        } else {
+            $options = $productOptions;
+        }
+
+        $currentOptionIds      = [];
+        $currentOptionValueIds = [];
+
+        $recordIdCounter = 0;
+        foreach ($options as $optionKey => $option) {
+            if (!isset($option['record_id'])) {
+                $options[$optionKey]['record_id'] = 'r' . $recordIdCounter;
+            }
+            $recordIdCounter++;
+            if (!empty($option['option_id'])) {
+                $currentOptionIds[$option['option_id']] = $option['option_id'];
+            }
+            if (!empty($option['values']) && is_array($option['values'])) {
+                foreach ($option['values'] as $valueKey => $value) {
+                    if (!isset($value['record_id'])) {
+                        $options[$optionKey]['values'][$valueKey]['record_id'] = 'r' . $recordIdCounter;
+                    }
+                    $recordIdCounter++;
+                    if (!empty($value['option_type_id'])) {
+                        $currentOptionValueIds[$value['option_type_id']] = $value['option_type_id'];
+                    }
+                }
+            }
+        }
+
+        foreach ($originalOptions as $originalOption) {
+            foreach ($options as $optionKey => $option) {
+                if (empty($option['option_id']) || empty($originalOption['option_id'])) {
+                    continue;
+                }
+                if ($option['option_id'] != $originalOption['option_id']) {
+                    if (!isset($currentOptionIds[$originalOption['option_id']])) {
+                        $originalOption->setData('is_delete', 1);
+                        $originalOption->setData('record_id', $originalOption['option_id']);
+                        $options[]                                      = $originalOption->getData();
+                        $currentOptionIds[$originalOption['option_id']] = true;
+                        break;
+                    }
+                } else {
+                    if (empty($originalOption->getValues()) || empty($option['values'])) {
+                        continue;
+                    }
+                    foreach ($originalOption->getValues() as $originalOptionValue) {
+                        foreach ($option['values'] as $optionValue) {
+                            if (empty($optionValue['option_type_id']) || empty($originalOptionValue['option_type_id'])) {
+                                continue;
+                            }
+                            $originalOptionValueId = $originalOptionValue['option_type_id'];
+                            if ($optionValue['option_type_id'] != $originalOptionValueId) {
+                                if (!isset($currentOptionValueIds[$originalOptionValueId])) {
+                                    $originalOptionValue['is_delete']              = 1;
+                                    $originalOptionValue['record_id']              = $originalOptionValueId;
+                                    $options[$optionKey]['values'][]               = $originalOptionValue->getData();
+                                    $currentOptionValueIds[$originalOptionValueId] = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        $processedOptions = [];
+        foreach ($options as $option) {
+            $processedOptions[] = $this->optionFactory->create()->setData($option);
+        }
+
+        return $processedOptions;
+    }
+
+    /**
+     * Return Options Data
+     *
+     * @param string $title
+     * @param int $recordId
+     * @return array
+     */
+    protected function getOptionTemplateData($title, $recordId) : array
+    {
+        $optionData = [];
+
+        $optionData = [
+            "sort_order" => (string)($recordId + 1),
+            "option_id" => "",
+            "is_require" => 1,
+            "disabled" => 0,
+            "disabled_by_values" => "",
+            "custom_class" => "",
+            "one_time" => 0,
+            "record_id" => $recordId,
+            "type" => "drop_down",
+            "title" => $title,
+        ];
+
+        return $optionData;
+    }
+
+    /**
+     * Return Options Value Data
+     *
+     * @param string $title
+     * @param int $recordId
+     * @param array $tierData
+     * @param array $tierPriceData
+     * @param int $valuePrice
+     * @param array $dependency
+     * @param integer $isDefault
+     * @return array
+     */
+    protected function getValueData(
+        $title,
+        $recordId,
+        $tierData,
+        $tierPriceData,
+        $valuePrice,
+        $dependency = [],
+        $isDefault = 0
+    ) : array {
+        $valueData = [];
+        $tierPrice = [];
+
+        if (!empty($tierData) && !empty($tierPriceData)) {
+            $i = 0;
+            // Preparing tier price data for options value
+            foreach ($tierData as $key => $qty) {
+                if (isset($tierPriceData[$key]) && $tierPriceData[$key]) {
+                    $price = preg_replace('/[^.0-9]/s', "", $tierPriceData[$key]);
+                    $tierPrice[] = [
+                        "record_id" => $i,
+                        "customer_group_id" => 32000,
+                        "qty" => $qty,
+                        "price" => $price,
+                        "price_type" => "fixed",
+                        "date_from" => "",
+                        "date_to" => ""
+                    ];
+                    $i++;
+                }
+            }
+        }
+
+        $valueData = [
+            "record_id" => $recordId,
+            "title" => $title,
+            "price_type" => "fixed",
+            "sort_order" => (string)($recordId + 1),
+            "disabled" => 0,
+            "tier_price" => json_encode($tierPrice),
+            "price" => $valuePrice,
+            "is_default" => $isDefault,
+            "manage_stock" => 0,
+        ];
+
+        // Add Dependency to Values
+        if (!empty($dependency)) {
+            $valueData['dependency_type'] = 0;
+            $valueData['dependency'] = json_encode($dependency);
+        }
+
+        return $valueData;
     }
 }
