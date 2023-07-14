@@ -304,8 +304,8 @@ class Data extends AbstractHelper
     {
         $collection = $this->productDataApiFactory->create()->getCollection()
                             ->addFieldToFilter('status', Status::STATUS_PROCESSING)
-                            // ->addFieldToFilter('SMCode', ["in" => ["SM4730818"]])
-                            ->setPageSize(50);
+                            // ->addFieldToFilter('SMCode', ["in" => ["SM233304"]])
+                            ->setPageSize(10);
 
         if (count($collection->getData()) > 0) {
             foreach ($collection->getData() as $productCode) {
@@ -320,6 +320,9 @@ class Data extends AbstractHelper
 
                 $associatedproductids = $this->createSimpleProduct($productCode);
 
+                $tierData = (isset($productCode['QuantityBreak']) && $productCode['QuantityBreak'])
+                    ? json_decode($productCode['QuantityBreak'], true) : [];
+
                 $configProduct = $this->productFactory->create();
                 $urlKey = $productCode['ProductName'] . " " . $productCode['SMCode'];
                 $urlKey = str_replace(" ", "-", preg_replace('/[^a-zA-Z0-9]/s', ' ', $urlKey));
@@ -328,13 +331,13 @@ class Data extends AbstractHelper
                     ->setAttributeSetId(4)
                     ->setStatus(1)
                     ->setTypeId('configurable')
-                    ->setPrice(100)
                     ->setVisibility(4)
                     ->setWebsiteIds([1])
                     ->setCategoryIds([2,3,4,5,6,7,8,9])
                     ->setData('priceRange', $productCode['PriceRange'])
                     ->setData('leadTime', $productCode['LeadTime'])
                     ->setData('printMethod', $productCode['PrintMethod'])
+                    ->setData('maximum_qty', max($tierData))
                     ->setDescription($productCode['ProductDescription'])
                     ->setUrlKey($urlKey)
                     ->setStockData([
@@ -432,13 +435,15 @@ class Data extends AbstractHelper
             $product = $this->productFactory->create();
             $urlKey = $rowData['ProductName']."-".$color . " " . $rowData['SMCode']."-". $color;
             $urlKey = str_replace(" ", "-", preg_replace('/[^a-zA-Z0-9]/s', ' ', $urlKey));
+            $price = explode("-", $rowData['PriceRange']);
+            $price = preg_replace('/[^.0-9]/s', "", $price[1]);
             $product->setSku($rowData['SMCode']."-".$color)
                 ->setName($rowData['ProductName']." ". $color)
                 ->setAttributeSetId(4)
                 ->setStatus(1)
                 ->setVisibility(1)
                 ->setTypeId('simple')
-                ->setPrice(100)
+                ->setPrice($price)
                 ->setWebsiteIds([1])
                 ->setCategoryIds([2,3,4,5,6,7,8,9])
                 ->setData('color', $colorOptions[$color])
@@ -521,7 +526,7 @@ class Data extends AbstractHelper
             "title" => $product->getSku(),
             "productskus" => "",
             "absolute_cost" => 0,
-            "absolute_price" => 0,
+            "absolute_price" => 1,
             "absolute_weight" => 0,
             "assign_type" => 2,
             "affect_product_custom_options" => 1,
@@ -865,7 +870,7 @@ class Data extends AbstractHelper
             $i = 0;
             // Preparing tier price data for options value
             foreach ($tierData as $key => $qty) {
-                if (isset($tierPriceData[$key]) && $tierPriceData[$key]) {
+                if (isset($tierPriceData[$key]) && $tierPriceData[$key] && $tierPriceData[$key] != "Please Call") {
                     $price = preg_replace('/[^.0-9]/s', "", $tierPriceData[$key]);
                     $tierPrice[] = [
                         "record_id" => $i,
@@ -895,6 +900,7 @@ class Data extends AbstractHelper
 
         // Add Dependency to Values
         if (!empty($dependency)) {
+            $valueData['price'] = 0;
             $valueData['dependency_type'] = 0;
             $valueData['dependency'] = json_encode($dependency);
         }
