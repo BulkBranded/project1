@@ -8,10 +8,10 @@
 $item = $block->getItem();
 ?>
 <tr id="order-item-row-<?= $escaper->escapeHtml($item->getId()) ?>">
-    <td class="col pos" data-th="<?= $escaper->escapeHtml(__('Qty')) ?>">
+    <td colspan="2" class="col pos" data-th="<?= $escaper->escapeHtml(__('Qty')) ?>">
         <?= $block->getPos() ?>
     </td>
-    <td class="col qty" data-th="<?= $escaper->escapeHtml(__('Qty')) ?>">
+    <td colspan="2" class="col qty" data-th="<?= $escaper->escapeHtml(__('Qty')) ?>">
         <span><?= $escaper->escapeHtml($block->getQty()) ?></span>
     </td>
     <td class="col price qty" data-th="<?= $escaper->escapeHtml(__('Original Price')) ?>">

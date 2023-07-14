@@ -57,7 +57,7 @@
                             <span><?=  /* @noEscape */ __("Login") ?></span>
                         </button>
                     <?php else: ?>
-                        <button type="button" id="download-pdf" class="download-pdf">
+                        <button type="button" id="download-pdf" class="download-pdf download-pdf action primary">
                             <span><?=  /* @noEscape */ __("Download PDF Quotation") ?></span>
                         </button>
                     <?php endif; ?>
@@ -82,6 +82,7 @@
             innerScroll: true,
             title: $('.page-title-wrapper.product .page-title .base').text(),
             clickableOverlay: false,
+            modalClass: 'download-pdf-modal',
             buttons: [
                 {
                     text: $.mage.__('Close'),
@@ -98,6 +99,10 @@
         $(".download-quotation").on('click',function(){
             $("#product-options-wrapper").appendTo("#quotation-details-content");
             $("#quotation-details-form").modal("openModal");
+        });
+
+        $('#quotation-details-form').on('modalclosed', function() {
+            $("#product-options-wrapper").insertBefore("#customisation_right");
         });
     }
 );

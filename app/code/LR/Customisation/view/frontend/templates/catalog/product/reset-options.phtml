@@ -26,7 +26,7 @@
     require(['jquery', 'Magento_Catalog/js/price-utils', 'jquery/ui'], function($, priceUtils){
         $(document).ready(function(){
             minqty = <?=  /* @noEscape */$block->getProduct()->getCustomAttribute('minimum_qty') ?
-            $block->getProduct()->getCustomAttribute('minimum_qty')->getValue() : 1 ?>;
+            $block->getProduct()->getCustomAttribute('minimum_qty')->getValue(): 1 ?>;
             maxqty = <?=  /* @noEscape */$block->getProduct()->getCustomAttribute('maximum_qty') ?
             $block->getProduct()->getCustomAttribute('maximum_qty')->getValue() : 100 ?>;
 
@@ -44,16 +44,6 @@
                     slide: function(event, ui) {
                         $("#qty").val(ui.values[0]);
                         $("#qty").trigger('change');
-                        var e = localStorage.getItem("promoBrandCurrentVat"),
-                            str = ("exc" === e) ? $(
-                            '[data-role="priceBox"] .price-excluding-tax .price'
-                            ).text() : $(
-                            '[data-role="priceBox"] .price-including-tax .price'
-                            ).text();
-                            price = str.slice(1).replace(",", '');
-                        $('.product-qty .qty-number').text(ui.values[0]);
-                        console.log('price', ui.values[0])
-                        $('.product-netprice .total-price').text(getFormattedPrice(price * ui.values[0]));
                     }
                 });
             };
@@ -62,21 +52,27 @@
 
             $(".product-option-reset").click(function(){
                 $("#product_addtocart_form").trigger("reset");
-                qtyPriceSlider();
-                if($('.catalog-product-view .swatch-attribute').hasClass("color")){
+                if($('.swatch-attribute').hasClass("color")){
                     if(!$('.swatch-option').first().hasClass("selected")) {
                         $('.swatch-option').first().trigger('click');
                     }
                 }
+                qtyPriceSlider();
+                $('.product-qty .qty-number span').text($("#qty").val());
             });
 
             $('.field select').on('change', function() {
                 var text = $(this).parents('.field').children('label').children('span').text();
                 if (text.includes('Position')) {
-                    // $(this).parents('.field').next().children('.control').children('input').attr("disabled", true);
+                    $(this).parents('.field').next().children('.control').children('input').attr("disabled", true);
                     $(this).parents('.field').next().children('.control').children('input').val($(this).val());
                 }
             });
         });
     });
 </script>
+<style>
+    .product-options-bottom .price-box, .product-info-price .price-box {
+        display: table-cell!important;
+    }
+</style>

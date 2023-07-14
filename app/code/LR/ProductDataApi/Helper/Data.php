@@ -1,6 +1,7 @@
 <?php
 namespace LR\ProductDataApi\Helper;
 
+use Exception;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\HTTP\Client\Curl;
 use Magento\Framework\App\Helper\Context;
@@ -20,6 +21,8 @@ use \Magento\Store\Model\Store;
 use \Magento\Store\Model\StoreFactory;
 use \Magento\Framework\Registry;
 use \MageWorx\OptionTemplates\Model\Group\OptionFactory;
+
+use function Aws\filter;
 
 class Data extends AbstractHelper
 {
@@ -203,9 +206,16 @@ class Data extends AbstractHelper
         if (!empty($smProductCode) && isset($smProductCode['data']) && $smProductCode['status'] == 1) {
             $counter = 0;
             foreach ($smProductCode['data'] as $productCode) {
-                $model = $this->productDataApiFactory->create();
-                $model->setData('SMCode', $productCode['SMCode']);
-                $model->save();
+                try {
+                    $model = $this->productDataApiFactory->create();
+                    $model->setData('SMCode', $productCode['SMCode']);
+                    $model->save();
+                } catch (Exception $e) {
+                    $writer = new \Zend_Log_Writer_Stream(BP . '/var/log/Fetch_SKU.log');
+                    $logger = new \Zend_Log();
+                    $logger->addWriter($writer);
+                    $logger->info($e->getMessage());
+                }
             }
         }
     }
@@ -220,7 +230,7 @@ class Data extends AbstractHelper
         $collection = $this->productDataApiFactory->create()->getCollection()
                             ->addFieldToFilter('status', Status::STATUS_ENABLE)
                             ->addFieldToFilter('ProductReferenceID', array('null' => true))
-                            ->setPageSize(20);
+                            ->setPageSize(100);
 
         if (count($collection->getData()) > 0) {
             foreach ($collection->getData() as $productCode) {
@@ -262,7 +272,8 @@ class Data extends AbstractHelper
                 $productFullData = array_merge($productMerge1, $productImageArray);
 
                 $model = $this->productDataApiFactory->create();
-                $model->setData($productFullData);
+                $model->setData($productFullData)
+                    ->setEntityId($productCode['entity_id']);
                 $model->setStatus(Status::STATUS_PROCESSING)->save();
             }
         }
@@ -293,16 +304,25 @@ class Data extends AbstractHelper
     {
         $collection = $this->productDataApiFactory->create()->getCollection()
                             ->addFieldToFilter('status', Status::STATUS_PROCESSING)
-                            // ->addFieldToFilter('SMCode', 'SM75867')
-                            ->setPageSize(1);
+                            // ->addFieldToFilter('SMCode', ["in" => ["SM4730818"]])
+                            ->setPageSize(50);
 
         if (count($collection->getData()) > 0) {
-            $this->registry->register('mageworx_template_create_process', true);
             foreach ($collection->getData() as $productCode) {
+
+                if ($productCode['ActualColours'] == null || $productCode['PriceRange'] == "Please Call") {
+                    $model = $this->productDataApiFactory->create();
+                    $model->setData($productCode)
+                        ->setStatus(Status::STATUS_DATAERROR)
+                        ->save();
+                    continue;
+                }
 
                 $associatedproductids = $this->createSimpleProduct($productCode);
 
                 $configProduct = $this->productFactory->create();
+                $urlKey = $productCode['ProductName'] . " " . $productCode['SMCode'];
+                $urlKey = str_replace(" ", "-", preg_replace('/[^a-zA-Z0-9]/s', ' ', $urlKey));
                 $configProduct->setSku($productCode['SMCode'])
                     ->setName($productCode['ProductName'])
                     ->setAttributeSetId(4)
@@ -311,11 +331,12 @@ class Data extends AbstractHelper
                     ->setPrice(100)
                     ->setVisibility(4)
                     ->setWebsiteIds([1])
-                    ->setCategoryIds([2])
+                    ->setCategoryIds([2,3,4,5,6,7,8,9])
                     ->setData('priceRange', $productCode['PriceRange'])
                     ->setData('leadTime', $productCode['LeadTime'])
                     ->setData('printMethod', $productCode['PrintMethod'])
                     ->setDescription($productCode['ProductDescription'])
+                    ->setUrlKey($urlKey)
                     ->setStockData([
                         'use_config_manage_stock' => 0,
                         'manage_stock' => 1,
@@ -325,7 +346,8 @@ class Data extends AbstractHelper
 
                 $colorAttrId = $configProduct->getResource()->getAttribute('color')->getId();
                 $configProduct->getTypeInstance()->setUsedProductAttributeIds([$colorAttrId], $configProduct);
-                $configurableAttributesData = $configProduct->getTypeInstance()->getConfigurableAttributesAsArray($configProduct);
+                $configurableAttributesData = $configProduct->getTypeInstance()
+                    ->getConfigurableAttributesAsArray($configProduct);
                 $configProduct->setCanSaveConfigurableAttributes(true);
                 $configProduct->setConfigurableAttributesData($configurableAttributesData);
                 $configurableProductsData = [];
@@ -333,27 +355,36 @@ class Data extends AbstractHelper
                 try {
                     $configProduct->setAssociatedProductIds($associatedproductids);
                     $configProduct->setCanSaveConfigurableAttributes(true);
-                    $tmpDir = $this->directoryList->getPath(DirectoryList::MEDIA) . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR;
-                    $this->file->checkAndCreateFolder($tmpDir);
-                    $newFileName = $tmpDir . baseName(trim($productCode['ImageURL'], '"'));
-                    $result = $this->file->read(trim($productCode['ImageURL'], '"'), $newFileName);
-                    if ($result) {
-                        $configProduct->addImageToMediaGallery(
-                            $newFileName,
-                            ['image', 'small_image', 'thumbnail'],
-                            false,
-                            false
-                        );
+                    if (isset($productCode['ImageURL']) && $productCode['ImageURL']) {
+                        $tmpDir = $this->directoryList->getPath(DirectoryList::MEDIA) . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR;
+                        $this->file->checkAndCreateFolder($tmpDir);
+                        $newFileName = $tmpDir . baseName(trim($productCode['ImageURL'], '"'));
+                        $result = $this->file->read(trim($productCode['ImageURL'], '"'), $newFileName);
+                        if ($result) {
+                            $configProduct->addImageToMediaGallery(
+                                $newFileName,
+                                ['image', 'small_image', 'thumbnail'],
+                                false,
+                                false
+                            );
+                        }
                     }
                     $configProduct->save();
+
                     $this->addCustomOptions($configProduct, $productCode);
-                    $model = $this->productDataApiFactory->create()->load($productCode['entity_id']);
-                    $model->setStatus(Status::STATUS_COMPLETED)->save();
+
+                    $model = $this->productDataApiFactory->create();
+                    $model->setData($productCode)
+                        ->setStatus(Status::STATUS_COMPLETED)
+                        ->save();
 
                 } catch (Exception $ex) {
-                    echo '<pre>';
-                    print_r($ex->getMessage());
-                    exit;
+                    $writer = new \Zend_Log_Writer_Stream(BP . '/var/log/Product_Create.log');
+                    $logger = new \Zend_Log();
+                    $logger->addWriter($writer);
+                    $logger->info($productCode['SMCode']. " ". $ex->getMessage());
+                } finally {
+                    $this->registry->unregister('mageworx_template_create_process');
                 }
             }
             $this->registry->unregister('mageworx_template_create_process');
@@ -373,7 +404,7 @@ class Data extends AbstractHelper
         }
         $colors = explode(',', $rowData['ActualColours']);
         $colors = array_map('trim', $colors);
-        $newColors = array_diff($colors, $this->getExistingOptions());
+        $newColors = array_filter(array_diff($colors, $this->getExistingOptions()));
 
         if (count($newColors)) {
             $colorAttrId = $this->attributeRepositoryInterface->get(
@@ -399,6 +430,8 @@ class Data extends AbstractHelper
         $colorOptions = array_flip($this->getExistingOptions());
         foreach ($colors as $key => $color) {
             $product = $this->productFactory->create();
+            $urlKey = $rowData['ProductName']."-".$color . " " . $rowData['SMCode']."-". $color;
+            $urlKey = str_replace(" ", "-", preg_replace('/[^a-zA-Z0-9]/s', ' ', $urlKey));
             $product->setSku($rowData['SMCode']."-".$color)
                 ->setName($rowData['ProductName']." ". $color)
                 ->setAttributeSetId(4)
@@ -407,8 +440,9 @@ class Data extends AbstractHelper
                 ->setTypeId('simple')
                 ->setPrice(100)
                 ->setWebsiteIds([1])
-                ->setCategoryIds([2])
+                ->setCategoryIds([2,3,4,5,6,7,8,9])
                 ->setData('color', $colorOptions[$color])
+                ->setUrlKey($urlKey)
                 ->setStockData([
                     'use_config_manage_stock' => 0,
                     'manage_stock' => 1,
@@ -419,9 +453,10 @@ class Data extends AbstractHelper
                 $product = $this->productRepositoryInterface->save($product);
                 $simpleProductIds[] = $product->getId();
             } catch (Exception $ex) {
-                echo '<pre>';
-                print_r($ex->getMessage());
-                exit;
+                $writer = new \Zend_Log_Writer_Stream(BP . '/var/log/Product_Create.log');
+                $logger = new \Zend_Log();
+                $logger->addWriter($writer);
+                $logger->info($rowData['SMCode']. " ". $ex->getMessage());
             }
         }
 
@@ -582,9 +617,7 @@ class Data extends AbstractHelper
         }
 
         // End data preparation
-
-        $this->registry->unregister('mageworx_optiontemplates_group_save');
-        $this->registry->unregister('mageworx_optiontemplates_group_id');
+        $this->registry->register('mageworx_template_create_process', true);
         $this->registry->register('mageworx_optiontemplates_group_save', true);
         $group = $this->groupFactory->create();
         $storeId = Store::DEFAULT_STORE_ID;
@@ -620,13 +653,14 @@ class Data extends AbstractHelper
                 [],
                 OptionSaver::SAVE_MODE_UPDATE
             );
-            $this->registry->unregister('mageworx_optiontemplates_group_save');
-            $this->registry->unregister('mageworx_optiontemplates_group_id');
-        } catch (\Exception $th) {
-            echo '<pre>';
-            print_r($th->getMessage());
-            print_r($th->getTrace());
-            die;
+        } catch (\Exception $ex) {
+            $writer = new \Zend_Log_Writer_Stream(BP . '/var/log/custom_attribute.log');
+            $logger = new \Zend_Log();
+            $logger->addWriter($writer);
+            $logger->info($ex->getMessage());
+            $logger->info($ex->getTraceAsString());
+        } finally {
+            $this->registry->__destruct();
         }
         return $this;
     }

@@ -13,8 +13,8 @@
             <caption class="table-caption"><?= $escaper->escapeHtml(__('Items Ordered')) ?></caption>
             <thead>
             <tr class="am-quotes-head">
-                <th class="col qty"><?= $escaper->escapeHtml(__('Pos')) ?></th>
-                <th class="col qty"><?= $escaper->escapeHtml(__('Qty')) ?></th>
+                <th colspan="2" class="col qty"><?= $escaper->escapeHtml(__('Pos')) ?></th>
+                <th colspan="2"  class="col qty"><?= $escaper->escapeHtml(__('Qty')) ?></th>
                 <th class="col price"><?= $escaper->escapeHtml(__('Unit Price NET')) ?></th>
                 <th class="col price"><?= $escaper->escapeHtml(__('Unit')) ?></th>
                 <th class="col name"><?= $escaper->escapeHtml(__('Product Description')) ?></th>
@@ -34,7 +34,7 @@
                 <tbody class="quote-item-notes">
                 <?php if ($item->getNotes()): ?>
                     <tr>
-                        <td colspan="3" class="amquote-cell-container">
+                        <td class="amquote-cell-container">
                             <?php if ($item->getNotes()->getCustomerNote()): ?>
                                 <?= $escaper->escapeHtml(__('Customer Note:')) ?>
                                 <div class="item-note amquote-note">
@@ -42,7 +42,7 @@
                                 </div>
                             <?php endif;?>
                         </td>
-                        <td colspan="3" class="amquote-cell-container">
+                        <td class="amquote-cell-container">
                             <?php if ($item->getNotes()->getAdminNote()): ?>
                                 <?= $escaper->escapeHtml(__('Administrator Note:')) ?>
                                 <div class="item-note amquote-note">

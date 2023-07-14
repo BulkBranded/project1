@@ -21,4 +21,10 @@
             </argument>
         </arguments>
     </type>
+    <type name="Magento\Catalog\Api\Data\ProductCustomOptionValuesInterfaceFactory">
+        <plugin name="lr_mageworx_optiontemplates_option_value_factory_resolver"
+                type="LR\ProductDataApi\Plugin\OptionValueFactoryResolver"
+                sortOrder="15"
+                disabled="false"/>
+    </type>
 </config>

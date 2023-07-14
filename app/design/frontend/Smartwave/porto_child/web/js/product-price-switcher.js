@@ -1,9 +1,11 @@
 require(['jquery', 'Magento_Catalog/js/price-utils', 'mage/translate'], function($, priceUtils){
     $(document).ready( function ($) {
-
-        $('#product_addtocart_form :input').change(function() {
-            i();
-        });
+        var divCheckingInterval = setInterval(function(){
+            if ($('body').is(".catalog-product-view")) {
+                i();
+                clearInterval(divCheckingInterval);
+            }
+        }, 100);
 
         $(document).ajaxStop(function () {
             i();
@@ -31,8 +33,17 @@ require(['jquery', 'Magento_Catalog/js/price-utils', 'mage/translate'], function
         function finalPrice() {
             var e = localStorage.getItem("promoBrandCurrentVat"),
                 qty = $("#qty").val(),
-                str = ("exc" === e) ? $('[data-role="priceBox"] .price-excluding-tax .price').text() : $('[data-role="priceBox"] .price-including-tax .price').text(),
-                priceValue = str.slice(1, str.length - 3).replace(",", '');
+                str = ("exc" === e) ? $('.product-customisation [data-role="priceBox"] .price-excluding-tax .price').text() : $('.product-customisation [data-role="priceBox"] .price-including-tax .price').text(),
+                priceValue = str.slice(1).replace(",", '');
+
+                if("exc" === e) {
+                    console.log('Productwefwefewfew')
+                    $('.product-customisation [data-role="priceBox"] .price-excluding-tax').removeClass('hide');
+                    $('.product-customisation [data-role="priceBox"] .price-including-tax').addClass('hide');
+                } else {
+                    $('.product-customisation [data-role="priceBox"] .price-excluding-tax').addClass('hide');
+                    $('.product-customisation [data-role="priceBox"] .price-including-tax').removeClass('hide');
+                }
 
             $('.product-netprice .total-price').text(getFormattedPrice(priceValue * qty));
         }

@@ -9,6 +9,7 @@ class Status implements ArrayInterface
     public const STATUS_ENABLE = 1;
     public const STATUS_PROCESSING = 2;
     public const STATUS_COMPLETED = 3;
+    public const STATUS_DATAERROR = 4;
 
     /**
      * Create value and label
@@ -40,6 +41,7 @@ class Status implements ArrayInterface
             self::STATUS_ENABLE => __('Enable'),
             self::STATUS_PROCESSING => __('Processing'),
             self::STATUS_COMPLETED => __('Complete'),
+            self::STATUS_DATAERROR => __('Data Error'),
         ];
     }
 }
